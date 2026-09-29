@@ -1,0 +1,12 @@
+Resume of John Doe
+Frontend Developer johndoe@email.com | (123) 456-7890 | linkedin.com/in/johndoe
+Summary A detail-oriented Frontend Developer with 3 years of experience building and maintaining responsive web applications using React. Proficient in modern JavaScript, HTML5, and CSS3, with a passion for creating intuitive user interfaces and a strong foundation in component-based architecture.
+Skills
+· Languages: JavaScript (ES6+), HTML5, CSS3, SASS · Frameworks/Libraries: React, Redux, jQuery · Tools: Git, Webpack, Babel, npm, Figma · APIs: RESTful APIs, Axios · Other: Responsive Design, Cross-Browser Compatibility, Agile Methodologies
+Experience Frontend Developer | Tech Solutions Inc. | 2021 - Present
+· Developed and maintained user-facing features for the main customer dashboard using React and Redux, resulting in a 15% improvement in user engagement.
+· Collaborated with UI/UX designers and backend engineers to translate wireframes into high-quality, reusable code.
+· Implemented responsive designs to ensure seamless functionality across desktops, tablets, and mobile devices.
+Education Bachelor of Science in Computer Science State University | 2017 - 2021
+
+

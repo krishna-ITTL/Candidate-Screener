@@ -1,0 +1,17 @@
+Arjun Mehta
+UI Engineer
+arjun.m@mail.com | +91 91234 56789
+
+Profile
+UI engineer with 4 years of experience in React and TypeScript, building responsive dashboards.
+
+Skills
+React, TypeScript, JavaScript, Redux, Jest, REST APIs, Figma, Webpack, Git
+
+Experience
+UI Engineer | DataWorks | 2021 - Present
+- Built dashboards in React and TypeScript with Redux state management.
+- Wrote unit tests with Jest.
+
+Education
+B.E. Information Technology, 2020

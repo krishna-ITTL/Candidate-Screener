@@ -1,0 +1,23 @@
+Priya Raman
+Senior Frontend Engineer
+priya.raman@mail.com | +91 98765 43210 | Bengaluru
+
+Summary
+Frontend engineer with 7 years of experience building large-scale B2B web applications with React, Next.js and TypeScript. Led a team of five and built our company-wide component library.
+
+Skills
+TypeScript, JavaScript, React, Next.js, Redux Toolkit, Zustand, GraphQL, Apollo Client, REST APIs, Jest, React Testing Library, Cypress, CI/CD with GitHub Actions, Docker, Web performance, Accessibility (WCAG)
+
+Experience
+Senior Frontend Engineer | Finlytics | 2021 - Present
+- Architected a Next.js server-side rendering platform serving 2M monthly users; cut LCP by 40%.
+- Built and maintained the design system and component library used by 6 product teams.
+- Introduced unit testing with Jest and React Testing Library; coverage from 30% to 85%.
+- Set up CI/CD pipelines on GitHub Actions with preview deployments.
+- Mentored 4 junior developers.
+
+Frontend Engineer | ShopKart | 2018 - 2021
+- Built GraphQL-powered storefront features with Apollo Client.
+
+Education
+B.Tech Computer Science, IIT Madras, 2018

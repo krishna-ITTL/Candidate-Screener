@@ -1,0 +1,9 @@
+Target Job Description (Senior Frontend Engineer)
+Position: Senior Frontend Engineer (Next.js) Company: Future Innovations Corp.
+About the Role: We are looking for an experienced Senior Frontend Engineer to lead the development of our nextgeneration B2B platform. You will be responsible for architecting and building complex, performant, and scalable user interfaces using cutting-edge technologies. You will mentor junior developers and play a key role in technical decision-making.
+Responsibilities:
+· Architect and implement high-performance web applications using Next.js and TypeScript. · Develop a robust component library and ensure code quality through rigorous testing. · Collaborate with product managers and designers to create a world-class user experience. · Optimize applications for maximum speed, scalability, and security. · Integrate with backend services using GraphQL and REST APIs. · Set up and maintain CI/CD pipelines for automated testing and deployment.
+Required Qualifications:
+· 5+ years of professional frontend development experience. · Expertise in TypeScript and the modern JavaScript ecosystem. · Deep experience with React and server-side rendering frameworks like Next.js. · Proficiency with automated testing frameworks such as Jest and React Testing Library. · Experience with state management solutions (e.g., Redux Toolkit, Zustand). · Strong understanding of GraphQL and its client-side implementation (e.g., Apollo Client). · Familiarity with CI/CD pipelines and DevOps principles.
+
+
