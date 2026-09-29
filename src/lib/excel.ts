@@ -107,7 +107,7 @@ function candidateSheet(wb: import('exceljs').Workbook, logo: number | null, nam
 export async function buildWorkbook(rep: Report, logoPng: ArrayBuffer | null) {
   const { default: ExcelJS } = await import('exceljs')
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'Indo Tech · Shortlist'
+  wb.creator = 'Indo Tech · Job Lens'
   wb.created = new Date(rep.date)
   const logo = logoPng ? wb.addImage({ buffer: logoPng, extension: 'png' }) : null
 
@@ -224,7 +224,7 @@ export async function buildMonthlyWorkbook(history: SavedRun[], month: string, l
   const { default: ExcelJS } = await import('exceljs')
   const m = monthly(history, month)
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'Indo Tech · Shortlist'
+  wb.creator = 'Indo Tech · Job Lens'
   const logo = logoPng ? wb.addImage({ buffer: logoPng, extension: 'png' }) : null
   const sheet = (name: string, title: string, widths: number[]) => {
     const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: RED } } })

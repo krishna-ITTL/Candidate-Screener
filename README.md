@@ -92,7 +92,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Demo login: `hr@shortlist.demo` / `Shortlist@2026`
+Demo login: `hr@joblens.demo` / `JobLens@2026`
 
 ```bash
 npm run build          # static site in dist/, host anywhere

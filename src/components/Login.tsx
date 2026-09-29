@@ -4,7 +4,7 @@ import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { BrandMark, CompanyLogo } from './Shell'
 import TubesBackground from './TubesBackground'
 
-const DEMO = { email: 'hr@shortlist.demo', password: 'Shortlist@2026' }
+const DEMO = { email: 'hr@joblens.demo', password: 'JobLens@2026' }
 
 const PEOPLE = [
   { name: 'Priya Raman', role: 'Senior Frontend Engineer', score: 92, color: '#f4e35a' },
@@ -69,13 +69,13 @@ export default function Login({ onSignIn }: { onSignIn: (email: string) => void 
     <div className="login">
       <TubesBackground />
       <section className="login-art">
-        <div className="brand"><CompanyLogo /><span className="brand-sep" aria-hidden /><BrandMark /> Shortlist</div>
+        <div className="brand"><CompanyLogo /><span className="brand-sep" aria-hidden /><BrandMark /> Job Lens</div>
         <div>
           <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}>
             Every resume read. The best ones on top.
           </motion.h1>
           <motion.p className="lede" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}>
-            Upload one job description and a stack of resumes. Shortlist scores each candidate against the same rubric,
+            Upload one job description and a stack of resumes. Job Lens scores each candidate against the same rubric,
             checks ATS readiness, and ranks them so you can decide in minutes.
           </motion.p>
         </div>

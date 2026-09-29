@@ -301,7 +301,7 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
       ...results.map((r) => [rankOf.get(r.id)!, r.eval.name, r.score, r.ats.score, d(r.id) === 'none' ? '' : d(r.id), r.eval.yearsExperience ?? '', r.eval.summary, r.matched.join('; '), r.missingEssential.join('; '), notes[r.id] ?? '', r.fileName]),
     ]
     const url = URL.createObjectURL(new Blob(['﻿' + csv(rows)], { type: 'text/csv;charset=utf-8' }))
-    const a = Object.assign(document.createElement('a'), { href: url, download: `shortlist-${new Date().toISOString().slice(0, 10)}.csv` })
+    const a = Object.assign(document.createElement('a'), { href: url, download: `joblens-${new Date().toISOString().slice(0, 10)}.csv` })
     a.click()
     URL.revokeObjectURL(url)
   }

@@ -50,7 +50,7 @@ export default function Shell({ user, page, onPage, theme, onTheme, onSignOut, c
     <>
       <header className={`header${scrolled ? ' scrolled' : ''}`}>
         <div className="header-inner">
-          <div className="brand"><CompanyLogo /><span className="brand-sep" aria-hidden /><BrandMark /> <span className="brand-word">Shortlist</span></div>
+          <div className="brand"><CompanyLogo /><span className="brand-sep" aria-hidden /><BrandMark /> <span className="brand-word">Job Lens</span></div>
           <nav className="nav" aria-label="Main">
             {NAV.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => go(id)} aria-current={page === id ? 'page' : undefined}>

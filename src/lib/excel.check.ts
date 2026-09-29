@@ -19,7 +19,7 @@ const wb = await buildWorkbook({
   decisions: { 0: 'shortlist', 1: 'reject' }, notes: { 0: 'Phone screen Thursday' },
   interviews: { 0: { when: '2026-10-01T10:30', mode: 'video', where: 'meet.google.com/abc-defg' } },
 }, logo.buffer.slice(logo.byteOffset, logo.byteOffset + logo.byteLength))
-const out = process.argv[2] ?? 'shortlist-report.check.xlsx'
+const out = process.argv[2] ?? 'joblens-report.check.xlsx'
 writeFileSync(out, Buffer.from(await wb.xlsx.writeBuffer()))
 
 const back = new ExcelJS.Workbook()
