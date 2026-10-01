@@ -44,6 +44,7 @@ Upload one job description and a stack of resumes. Job Lens scores every candida
 
 **After the ranking**
 - ✅ **Decisions**: Shortlist, Hold or Reject, private notes for each candidate, and search and filters.
+- 🪜 **Interview pipeline**: Stage 1 HR → Stage 2 HOD → Stage 3 CEO/COO, each with result, date and interviewers, then the offer (designation, recommended CTC, date of joining). Each stage opens when the previous one selects the candidate.
 - 📅 **Interviews**: date, format and link or address, and **Add to calendar** (.ics for Outlook or Google Calendar).
 - ✉️ **Email templates**: invite, keep-warm and regret emails with the name, role and interview time filled in. Send to one candidate or a whole group (BCC). Edit the templates in Settings.
 - 👥 **Contacts**: email, phone, LinkedIn, GitHub and portfolio pulled from each resume, grouped by decision.
