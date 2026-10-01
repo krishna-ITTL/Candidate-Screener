@@ -1,5 +1,5 @@
 import type { Decision, Requirement, Result } from './types'
-import type { Interview } from './hr'
+import type { Interview, Pipeline } from './hr'
 
 export interface SavedRun {
   id: string
@@ -12,6 +12,7 @@ export interface SavedRun {
   decisions: Record<string, Decision>
   notes: Record<string, string>
   interviews?: Record<string, Interview>
+  pipeline?: Record<string, Pipeline>
 }
 
 const KEY = 'shortlist.history'

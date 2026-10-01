@@ -74,3 +74,23 @@ assert.equal(first.getCell(9).value, 'Senior Frontend Engineer')
 assert.equal(first.getCell(19).value, 'Selected')
 assert.match(String(first.getCell(24).value), /^Job Lens match \d+\/100, ATS \d+\. Phone screen Thursday$/)
 console.log('ok tracker', tout)
+
+// Pipeline: stages, interviewers and the offer land in HR's columns; stale stages after an undone decision do not.
+const pwb = await buildTrackerWorkbook({ title: 'Senior Frontend Engineer', date: Date.UTC(2026, 8, 29), received: 4, results, reqs,
+  decisions: { 0: 'shortlist', 1: 'reject' }, notes: {}, interviews: {}, jd: '',
+  pipeline: {
+    0: { hrInterviewers: 'Asha', hod: { status: 'selected', when: '2026-10-02T11:00', interviewers: 'Ravi' }, ceo: { status: 'selected', when: '', interviewers: 'MD' },
+      noticePeriod: '30 days', recommendedCtc: '14 LPA', designationOffered: 'Senior Engineer', dateOfJoining: '2026-11-03' },
+    1: { hod: { status: 'selected', when: '', interviewers: 'Ravi' }, designationOffered: 'stale' },
+  } })
+const prow = (n: number) => (pwb.worksheets[0].getRow(n).values as unknown[]).slice(1)
+const priyaRow = prow(2)
+assert.equal(priyaRow[12], '30 days', 'HR-entered notice period wins')
+assert.equal(priyaRow[15], '14 LPA')
+assert.equal(priyaRow[16], 'HR: Asha; HOD: Ravi; CEO/COO: MD')
+assert.match(String(priyaRow[19]), /^Selected \(.+2026.+\)$/)
+assert.equal(priyaRow[20], 'Selected')
+assert.deepEqual([priyaRow[21], priyaRow[22]], ['Senior Engineer', '03-11-2026'])
+const rejected = [2, 3, 4].map(prow).find((r) => r[18] === 'Rejected')!
+assert.ok(rejected[18] === 'Rejected' && !rejected[19] && !rejected[21] && !rejected[16], 'no stages or offer after HR rejects')
+console.log('ok tracker pipeline')

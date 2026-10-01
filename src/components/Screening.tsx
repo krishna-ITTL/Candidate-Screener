@@ -13,7 +13,7 @@ import { evaluate, extractRequirements, friendlyError, PROVIDERS, type AiSetting
 import { assemble } from '../lib/scoring'
 import { cachedEmbed, clearEmbedCache, lexicalEmbed, offlineEvaluate, offlineRequirements, onModelProgress, preEmbed, type Embed } from '../lib/offline'
 import type { Decision, Requirement, Result, ResumeFile } from '../lib/types'
-import type { Interview } from '../lib/hr'
+import type { Interview, Pipeline } from '../lib/hr'
 
 const STAGES = [
   { title: 'Reading files', text: 'Text from every document', icon: ScanSearch },
@@ -61,6 +61,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
   const [decisions, setDecisions] = useState<Record<string, Decision>>({})
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [interviews, setInterviews] = useState<Record<string, Interview>>({})
+  const [pipeline, setPipeline] = useState<Record<string, Pipeline>>({})
   const [run, setRun] = useState<{ id: string; date: number; title: string; jd: string; received: number } | null>(null)
   const [history, setHistory] = useState(loadHistory)
   const progressRef = useRef<HTMLDivElement>(null)
@@ -85,14 +86,14 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
   const modelLabel = provider.models.find((m) => m.id === settings.model)?.label ?? `${provider.short} ${settings.model}`
 
   // The finished run, with decisions and notes as they change, sits at the top of Recent screenings.
-  const runs = run && results.length ? [{ ...run, reqs, results, decisions, notes, interviews }, ...history.filter((x) => x.id !== run.id)] : history
-  useEffect(() => { if (run && results.length) saveHistory(runs) }, [run, results, reqs, decisions, notes, interviews]) // eslint-disable-line react-hooks/exhaustive-deps
+  const runs = run && results.length ? [{ ...run, reqs, results, decisions, notes, interviews, pipeline }, ...history.filter((x) => x.id !== run.id)] : history
+  useEffect(() => { if (run && results.length) saveHistory(runs) }, [run, results, reqs, decisions, notes, interviews, pipeline]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const openRun = (r: SavedRun) => {
     if (busy) return
     setHistory(runs)
     setJd(r.jd); setJdKey((k) => k + 1); setFiles([]); setStep(1)
-    setReqs(r.reqs); setResults(r.results); setDecisions(r.decisions); setNotes(r.notes); setInterviews(r.interviews ?? {})
+    setReqs(r.reqs); setResults(r.results); setDecisions(r.decisions); setNotes(r.notes); setInterviews(r.interviews ?? {}); setPipeline(r.pipeline ?? {})
     setRun({ id: r.id, date: r.date, title: r.title, jd: r.jd, received: r.received ?? r.results.length })
     setErrors([]); setNote(`Reopened from ${new Date(r.date).toLocaleDateString()}`); setStage(4)
     setTimeout(() => resultsRef.current && scrollTo(resultsRef.current, { offset: -80 }), 100)
@@ -131,7 +132,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
     setHistory(runs)
     setDecisions({})
     setNotes({})
-    setInterviews({})
+    setInterviews({}); setPipeline({})
     setRun(null)
     setDone(0)
     setTotal(batch.length)
@@ -188,7 +189,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
 
   const reset = () => {
     if (results.length && !confirm('Clear the job description, all resumes and the current ranking?')) return
-    setJd(''); setFiles([]); setResults([]); setReqs([]); setHistory(runs); setDecisions({}); setNotes({}); setInterviews({}); setRun(null); setErrors([]); setStage(-1); setDone(0); setTotal(0)
+    setJd(''); setFiles([]); setResults([]); setReqs([]); setHistory(runs); setDecisions({}); setNotes({}); setInterviews({}); setPipeline({}); setRun(null); setErrors([]); setStage(-1); setDone(0); setTotal(0)
     setJdKey((k) => k + 1)
     clearEmbedCache()
     setStep(1)
@@ -325,6 +326,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
             decisions={decisions} onDecide={(id, v) => setDecisions((s) => ({ ...s, [id]: v }))}
             notes={notes} onNote={(id, v) => setNotes((s) => ({ ...s, [id]: v }))}
             interviews={interviews} onInterview={(id, i) => setInterviews((s) => ({ ...s, [id]: i }))}
+            pipeline={pipeline} onPipeline={(id, p) => setPipeline((s) => ({ ...s, [id]: p }))}
             history={runs} runId={run?.id ?? ''} jd={run?.jd ?? jd}
           />
         </div>

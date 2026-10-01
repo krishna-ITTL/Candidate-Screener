@@ -97,3 +97,9 @@ Education: B.Tech Electrical Engineering`)
 console.log('\nEngineering JD:', { designer, seller })
 assert.ok(designer > seller + 10, `designer (${designer}) should clearly beat salesperson (${seller})`)
 console.log('ok (engineering JD)')
+
+// Two-word items can still be met when both words are there ("Shift scheduling").
+const shortReqs = offlineRequirements('Requirements\n- Shift scheduling\n- Good with people')
+const shortEv = await offlineEvaluate(shortReqs, 'Ravi\nDid shift scheduling for 120 operators across three plants.', 'x.pdf', embed)
+assert.equal(shortEv.assessments.find((a) => a.skill === 'Shift scheduling')?.level, 'met')
+console.log('ok (short items)')

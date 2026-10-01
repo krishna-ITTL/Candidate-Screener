@@ -10,7 +10,8 @@ import { ElasticSlider } from './ElasticSlider'
 import { Contacts, Stats } from './Insights'
 import { downloadExcel, downloadTracker } from '../lib/excel'
 import Compare from './Compare'
-import { buildIcs, describeInterview, download, findDuplicates, firstName, loadTemplates, mailto, MODE_LABEL, type Dup, type Interview, type InterviewMode } from '../lib/hr'
+import PipelinePanel from './Pipeline'
+import { buildIcs, describeInterview, download, findDuplicates, firstName, loadTemplates, mailto, MODE_LABEL, type Dup, type Interview, type InterviewMode, type Pipeline } from '../lib/hr'
 import type { SavedRun } from '../lib/history'
 
 function InterviewRow({ value, onChange, onCalendar }: { value?: Interview; onChange: (i: Interview) => void; onCalendar: () => void }) {
@@ -68,11 +69,12 @@ interface CardProps {
   decision: Decision; onDecide: (d: Decision) => void
   note: string; onNote: (v: string) => void
   interview?: Interview; onInterview: (i: Interview) => void; onCalendar: () => void
+  pipeline?: Pipeline; onPipeline: (p: Pipeline) => void
   emailHref: string; dup?: Dup; dupNames: string
   picked: boolean; onPick: () => void; pickFull: boolean
 }
 
-function Card({ r, rank, reqs, text, decision, onDecide, note, onNote, interview, onInterview, onCalendar, emailHref, dup, dupNames, picked, onPick, pickFull }: CardProps) {
+function Card({ r, rank, reqs, text, decision, onDecide, note, onNote, interview, onInterview, onCalendar, pipeline, onPipeline, emailHref, dup, dupNames, picked, onPick, pickFull }: CardProps) {
   const [open, setOpen] = useState(false)
   const [showText, setShowText] = useState(false)
   const t = tone(r.score)
@@ -119,6 +121,7 @@ function Card({ r, rank, reqs, text, decision, onDecide, note, onNote, interview
             </p>
           )}
           {decision === 'shortlist' && <InterviewRow value={interview} onChange={onInterview} onCalendar={onCalendar} />}
+          <PipelinePanel decision={decision} value={pipeline} profile={r.profile} onChange={onPipeline} />
           <div className="skill-groups">
             <div>
               <h4><CheckCircle2 size={14} color="var(--good)" /> Matched skills ({r.matched.length})</h4>
@@ -253,9 +256,11 @@ interface Props {
   history: SavedRun[]
   runId: string
   jd: string
+  pipeline: Record<string, Pipeline>
+  onPipeline: (id: string, p: Pipeline) => void
 }
 
-export default function Results({ results, reqs, files, title, decisions, onDecide, notes, onNote, onToast, date, received, interviews, onInterview, history, runId, jd }: Props) {
+export default function Results({ results, reqs, files, title, decisions, onDecide, notes, onNote, onToast, date, received, interviews, onInterview, history, runId, jd, pipeline, onPipeline }: Props) {
   const [picked, setPicked] = useState<string[]>([])
   const [comparing, setComparing] = useState(false)
   const [view, setView] = useState<'cards' | 'stats' | 'contacts'>('cards')
@@ -326,7 +331,7 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
   // HR's own candidate tracker: same 24 columns, ready to paste into their sheet.
   const exportTracker = async () => {
     try {
-      await downloadTracker({ title, date: date || Date.now(), received, results, reqs, decisions, notes, interviews, jd })
+      await downloadTracker({ title, date: date || Date.now(), received, results, reqs, decisions, notes, interviews, jd, pipeline })
       onToast('Candidate tracker downloaded.')
     } catch {
       onToast('Could not build the candidate tracker. Try again.')
@@ -401,6 +406,7 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
           {shown.map((r) => (
             <Card key={r.id} r={r} rank={rankOf.get(r.id)!} reqs={reqs} text={textOf.get(r.id) ?? ''} decision={d(r.id)} onDecide={(v) => onDecide(r.id, v)} note={notes[r.id] ?? ''} onNote={(v) => onNote(r.id, v)}
               interview={interviews[r.id]} onInterview={(i) => onInterview(r.id, i)} onCalendar={() => calendar([r])}
+              pipeline={pipeline[r.id]} onPipeline={(p) => onPipeline(r.id, p)}
               emailHref={emailFor(r)} dup={dups.get(r.id)} dupNames={(dups.get(r.id)?.sameRun ?? []).map((id) => `#${rankOf.get(id)} ${results.find((x) => x.id === id)?.eval.name}`).join(', ')}
               picked={picked.includes(r.id)} onPick={() => togglePick(r.id)} pickFull={picked.length >= 3} />
           ))}

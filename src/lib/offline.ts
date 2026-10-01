@@ -265,7 +265,9 @@ export async function offlineEvaluate(reqs: OfflineReq[], resume: string, fileNa
     const lex: Level = share >= T.lexMet ? 'met' : share >= T.lexPartial ? 'partial' : 'missing'
     // A short, skill-like item embeds too vaguely to be met on meaning alone: its words must be there too.
     let sem: Level = hit.score >= T.bulletMet ? 'met' : hit.score >= T.bulletPartial ? 'partial' : 'missing'
-    if (sem === 'met' && words.length <= 5 && lex === 'missing') sem = 'partial'
+    // (One- or two-word items have no overlap share, so for them every word in one place counts as that evidence.)
+    const allWords = words.length > 0 && words.length < 3 && resumeWords.some((set) => words.every((w) => set.has(w)))
+    if (sem === 'met' && words.length <= 5 && lex === 'missing' && !allWords) sem = 'partial'
     const level = RANK[sem] >= RANK[lex] ? sem : lex
     const line = RANK[lex] > RANK[sem] ? `${raw[at]} ${raw[at + 1] ?? ''}`.trim() : hit.line
     return { skill: r.skill, level, evidence: level === 'missing' ? '' : clip(line) }

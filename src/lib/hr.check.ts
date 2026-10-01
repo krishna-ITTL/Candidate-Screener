@@ -38,3 +38,11 @@ assert.deepEqual(rep.totals, { screenings: 1, received: 4, screened: 3, shortlis
 assert.equal(monthly([sep, past], '2026-10').totals.interviews, 1)
 assert.equal(rep.shortlisted[0].r.id, 'a')
 console.log('ok hr')
+
+// Pipeline stages open one after another.
+const { openStages, describeStage } = await import('./hr')
+assert.deepEqual(openStages('hold', { hod: { status: 'selected', when: '', interviewers: '' } }), { hod: false, ceo: false, offer: false })
+assert.deepEqual(openStages('shortlist', { hod: { status: 'selected', when: '', interviewers: '' } }), { hod: true, ceo: true, offer: false })
+assert.equal(describeStage({ status: 'pending', when: '', interviewers: 'X' }), '')
+assert.equal(describeStage({ status: 'rejected', when: '', interviewers: '' }), 'Rejected')
+console.log('ok pipeline')

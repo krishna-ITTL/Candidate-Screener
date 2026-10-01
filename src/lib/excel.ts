@@ -1,6 +1,6 @@
 import type { Cell, Worksheet } from 'exceljs'
 import type { Decision, Requirement, Result } from './types'
-import { describeInterview, formatWhen, MODE_LABEL, monthly, type Interview } from './hr'
+import { describeInterview, describeStage, formatWhen, MODE_LABEL, monthly, openStages, type Interview, type Pipeline } from './hr'
 import type { SavedRun } from './history'
 import { jdDepartment } from './jdTemplate'
 
@@ -286,7 +286,10 @@ function ageAt(dob: string, stated: string, date: number) {
   return age > 14 && age < 80 ? String(age) : ''
 }
 
-export async function buildTrackerWorkbook(rep: Report & { jd?: string }) {
+type TrackerReport = Report & { jd?: string; pipeline?: Record<string, Pipeline> }
+const dmy = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-').reverse().join('-') : iso)
+
+export async function buildTrackerWorkbook(rep: TrackerReport) {
   const { default: ExcelJS } = await import('exceljs')
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Indo Tech · Job Lens'
@@ -300,11 +303,20 @@ export async function buildTrackerWorkbook(rep: Report & { jd?: string }) {
   rep.results.forEach((r, i) => {
     const p = r.profile
     const iv = rep.interviews?.[r.id]
+    const decision = rep.decisions[r.id] ?? 'none'
+    const pl = rep.pipeline?.[r.id] ?? {}
+    // Later stages only count while the earlier ones are "Selected", so an undone decision never leaves stale stages behind.
+    const open = openStages(decision, pl)
+    const interviewers = [open.hod && pl.hrInterviewers && `HR: ${pl.hrInterviewers}`, open.hod && pl.hod?.interviewers && `HOD: ${pl.hod.interviewers}`,
+      open.ceo && pl.ceo?.interviewers && `CEO/COO: ${pl.ceo.interviewers}`].filter(Boolean).join('; ')
     // Plain strings from the resume are written as text, never formulas.
     ws.addRow([
       i + 1, new Date(rep.date), r.eval.name, p?.dob ?? '', ageAt(p?.dob ?? '', p?.age ?? '', rep.date), p?.education ?? '', p?.native ?? '', department, role,
-      r.eval.yearsExperience !== null ? `${r.eval.yearsExperience} yrs` : '', p?.currentCompany ?? '', p?.currentLocation ?? '', p?.noticePeriod ?? '',
-      p?.presentCtc ?? '', p?.expectedCtc ?? '', '', '', iv?.when ? formatWhen(iv.when) : '', STAGE1[rep.decisions[r.id] ?? 'none'], '', '', '', '',
+      r.eval.yearsExperience !== null ? `${r.eval.yearsExperience} yrs` : '', p?.currentCompany ?? '', p?.currentLocation ?? '',
+      pl.noticePeriod || p?.noticePeriod || '', pl.presentCtc || p?.presentCtc || '', pl.expectedCtc || p?.expectedCtc || '',
+      open.offer ? pl.recommendedCtc ?? '' : '', interviewers, iv?.when ? formatWhen(iv.when) : '', STAGE1[decision],
+      open.hod ? describeStage(pl.hod) : '', open.ceo ? describeStage(pl.ceo) : '',
+      open.offer ? pl.designationOffered ?? '' : '', open.offer ? dmy(pl.dateOfJoining ?? '') : '',
       [`Job Lens match ${r.score}/100, ATS ${r.ats.score}.`, rep.notes[r.id]].filter(Boolean).join(' '),
     ])
   })
@@ -313,7 +325,7 @@ export async function buildTrackerWorkbook(rep: Report & { jd?: string }) {
   return wb
 }
 
-export async function downloadTracker(rep: Report & { jd?: string }) {
+export async function downloadTracker(rep: TrackerReport) {
   const safe = (rep.title || 'screening').replace(/[^\w -]+/g, '').trim().slice(0, 40).replace(/\s+/g, '-')
   await save(await buildTrackerWorkbook(rep), `Candidate-Tracker-${safe}-${new Date(rep.date).toISOString().slice(0, 10)}.xlsx`)
 }

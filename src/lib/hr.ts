@@ -153,3 +153,33 @@ export function monthly(history: SavedRun[], month: string /* YYYY-MM */) {
     totals: { screenings: roles.length, received: sum('received'), screened: sum('screened'), shortlist: sum('shortlist'), hold: sum('hold'), reject: sum('reject'), none: sum('none'), interviews: interviews.length },
   }
 }
+
+// ---------- Interview pipeline: Stage 1 HR → Stage 2 HOD → Stage 3 CEO/COO → offer ----------
+// Stage 1 is the Shortlist / Hold / Reject decision (and its interview); the later stages open one after another.
+
+export type StageStatus = 'pending' | 'selected' | 'hold' | 'rejected'
+export const STAGE_LABEL: Record<StageStatus, string> = { pending: 'Pending', selected: 'Selected', hold: 'On hold', rejected: 'Rejected' }
+export interface Stage { status: StageStatus; when: string; interviewers: string }
+export interface Pipeline {
+  hrInterviewers?: string
+  hod?: Stage
+  ceo?: Stage
+  // HR's own entries; when blank, the tracker uses what the resume states
+  noticePeriod?: string
+  presentCtc?: string
+  expectedCtc?: string
+  recommendedCtc?: string
+  designationOffered?: string
+  dateOfJoining?: string // yyyy-mm-dd from <input type="date">
+}
+
+/** Stages that apply, given the HR decision: HOD only after HR selects, CEO/COO only after HOD selects, offer only after both. */
+export function openStages(decision: Decision, p: Pipeline = {}) {
+  const hod = decision === 'shortlist'
+  const ceo = hod && p.hod?.status === 'selected'
+  return { hod, ceo, offer: ceo && p.ceo?.status === 'selected' }
+}
+
+/** "Selected (Thu, 2 Oct 2026, 2:30 pm)" for the tracker's stage columns. */
+export const describeStage = (s?: Stage) =>
+  !s || (s.status === 'pending' && !s.when) ? '' : `${STAGE_LABEL[s.status]}${s.when ? ` (${formatWhen(s.when)})` : ''}`

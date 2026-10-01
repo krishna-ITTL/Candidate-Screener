@@ -713,3 +713,21 @@ a[href], select, summary, [role='tab'], [role='radio'], label:has(> input[type='
 .report-list li { display: grid; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .report-list li:last-child { border-bottom: 0; }
 .report-list small { color: var(--muted); font-size: 12.5px; }
+
+/* ---------- Card: interview pipeline (HOD, CEO/COO, offer) ---------- */
+.pipeline { margin-top: 8px; display: grid; gap: 8px; }
+.pipeline .input, .pipeline .select { height: 36px; font-size: 13.5px; border-radius: 10px; }
+.pipeline-details { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
+.pipeline-details.offer { grid-template-columns: auto repeat(3, minmax(0, 1fr)); align-items: end; background: var(--good-soft); }
+.field-sm { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.stage-row { padding: 10px 12px; border-radius: 14px; background: var(--surface-2); display: grid; grid-template-columns: 150px 130px minmax(190px, 1fr) minmax(160px, 1.3fr); gap: 8px; align-items: center; }
+.stage-row .interview-label { color: var(--ink); }
+.stage-row.s-selected { background: var(--good-soft); }
+.stage-row.s-selected .interview-label { color: var(--good); }
+.stage-row.s-hold { background: var(--warn-soft); }
+.stage-row.s-rejected { background: var(--bad-soft); }
+.pipeline-note { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+@media (max-width: 1100px) {
+  .pipeline-details, .pipeline-details.offer, .stage-row { grid-template-columns: 1fr 1fr; }
+  .stage-row .interview-label, .pipeline-details.offer .interview-label { grid-column: 1 / -1; }
+}
