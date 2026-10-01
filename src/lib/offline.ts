@@ -85,14 +85,17 @@ const cos = (a: number[], b: number[]) => a.reduce((s, v, i) => s + v * b[i], 0)
 
 // Sentence-to-sentence similarity thresholds, calibrated on sample JD bullets vs resume lines.
 // Single skill names embed poorly with this model, so skills use exact aliases + the related-skills map instead.
-const T = { bulletMet: 0.6, bulletPartial: 0.4, lexMet: 0.6, lexPartial: 0.35 }
+const T = { bulletMet: 0.6, bulletPartial: 0.4, lexMet: 0.5, lexPartial: 0.3 }
 const RANK: Record<Level, number> = { missing: 0, partial: 1, met: 2 }
 
 // Words that appear in almost every JD bullet and say nothing about the candidate.
 const GENERIC = new Set('ensure ensuring manage managing handle handling support work working team company role roles including within other plant staff day keep lead leading drive driving across'.split(' '))
-/** Distinct, stemmed content words for the lexical match. */
-const contentWords = (s: string) => [...new Set((s.toLowerCase().match(/[a-z][a-z+#&]{2,}/g) ?? [])
-  .filter((w) => !STOP.has(w) && !GENERIC.has(w)).map((w) => w.replace(/(ing|ed|(?<!s)s)$/, '').replace(/e$/, '')))] // compliance/compliances → complianc
+/** Stemmed content words in order, for the lexical match. */
+const contentSeq = (s: string) => (s.toLowerCase().match(/[a-z][a-z+#&]{2,}/g) ?? [])
+  .filter((w) => !STOP.has(w) && !GENERIC.has(w)).map((w) => w.replace(/(ing|ed|(?<!s)s)$/, '').replace(/e$/, '')) // compliance/compliances → complianc
+const contentWords = (s: string) => [...new Set(contentSeq(s))]
+/** Adjacent word pairs ("electrical design", "power transformer"): the skill, not just the industry's vocabulary. */
+const contentPairs = (s: string) => { const q = contentSeq(s); return [...new Set(q.slice(1).map((w, i) => `${q[i]} ${w}`))] }
 
 // ---------- Requirements ----------
 
@@ -111,7 +114,8 @@ const HEAD_SKIP = /^(position details|about (us|our|the company|(?!the\b|you\b)[
 // "Maximum Monthly Salary: as per norms"), so duties like "Compensation and benefits administration" stay.
 const PERSONAL = /^\W*(?:age|gender|sex|marital status|religion|caste|nationality|date of birth|dob)\s*(?:[:\-–(]|\d|limit|between|of\b)/i
 const PAY = /^\W*(?:(?:maximum|minimum|expected|monthly|annual|gross|fixed)\s+)*(?:salary|ctc|compensation|package|remuneration|pay)\s*(?:[:\-–(]|\d|range|between|per\b|up\s*to|as per)/i
-const ADVANTAGE = /^\W*(?:added advantage|advantage|preferred|desirable|nice to have|good to have)\b/i
+// "Language: English" says little to tell candidates apart, so it is a nice-to-have, like an "Added advantage".
+const ADVANTAGE = /^\W*(?:added advantage|advantage|preferred|desirable|nice to have|good to have|languages?\s*(?:known)?\s*:)/i
 
 function shortLabel(s: string) {
   const clean = s.replace(BULLET, '').replace(/[.;:]+$/, '').trim()
@@ -182,7 +186,9 @@ export function offlineRequirements(jd: string): OfflineReq[] {
       const label = shortLabel(line)
       if (!seen.has(label)) {
         seen.add(label)
-        reqs.push({ kind: 'bullet', skill: label, text: line.replace(BULLET, ''), importance: section === 'req' && importance === 'essential' ? 'essential' : 'preferred' })
+        // In a Word-table JD the duties list is the job itself, so it counts as essential, like the skills list.
+        const core = section === 'req' || (plainLines && section === 'resp')
+        reqs.push({ kind: 'bullet', skill: label, text: line.replace(BULLET, ''), importance: core && importance === 'essential' ? 'essential' : 'preferred' })
       }
     }
   }
@@ -209,6 +215,7 @@ export async function offlineEvaluate(reqs: OfflineReq[], resume: string, fileNa
   // Lexical evidence comes from sentences only, never from keyword lists ("a, b, c, d, e" or "x | y").
   const raw = logicalLines(resume).map((l) => l.slice(0, 400)).filter(isSentence)
   const resumeWords = raw.map((l, i) => new Set(contentWords(`${l} ${raw[i + 1] ?? ''}`)))
+  const resumePairs = raw.map((l, i) => new Set([...contentPairs(l), ...contentPairs(raw[i + 1] ?? '')]))
   const years = yearsOf(resume, fileName)
   const semantic = reqs.filter((r) => r.kind === 'bullet')
   const queries = semantic.map((r) => r.text)
@@ -243,14 +250,22 @@ export async function offlineEvaluate(reqs: OfflineReq[], resume: string, fileNa
         : { skill: r.skill, level: 'missing', evidence: '' }
     }
     const hit = best(semantic.indexOf(r))
-    const sem: Level = hit.score >= T.bulletMet ? 'met' : hit.score >= T.bulletPartial ? 'partial' : 'missing'
     // Word overlap catches what the small model misses ("PF, ESI, CLRA" vs "statutory compliance under … CLRA").
-    // Evidence must sit together (one line or two adjacent lines), not be scattered across a long resume.
+    // Evidence must sit together (one line or two adjacent lines), not be scattered across a long resume, and word
+    // pairs count half: "electrical design" is the skill, "power … distribution … transformer" is just the industry.
     const words = contentWords(r.text)
+    const pairs = contentPairs(r.text)
     let share = 0
     let at = -1
-    if (words.length >= 3) resumeWords.forEach((set, i) => { const s = words.filter((w) => set.has(w)).length / words.length; if (s > share) { share = s; at = i } })
+    if (words.length >= 3) resumeWords.forEach((set, i) => {
+      const u = words.filter((w) => set.has(w)).length / words.length
+      const s = pairs.length >= 2 ? (u + pairs.filter((p) => resumePairs[i].has(p)).length / pairs.length) / 2 : u
+      if (s > share) { share = s; at = i }
+    })
     const lex: Level = share >= T.lexMet ? 'met' : share >= T.lexPartial ? 'partial' : 'missing'
+    // A short, skill-like item embeds too vaguely to be met on meaning alone: its words must be there too.
+    let sem: Level = hit.score >= T.bulletMet ? 'met' : hit.score >= T.bulletPartial ? 'partial' : 'missing'
+    if (sem === 'met' && words.length <= 5 && lex === 'missing') sem = 'partial'
     const level = RANK[sem] >= RANK[lex] ? sem : lex
     const line = RANK[lex] > RANK[sem] ? `${raw[at]} ${raw[at + 1] ?? ''}`.trim() : hit.line
     return { skill: r.skill, level, evidence: level === 'missing' ? '' : clip(line) }

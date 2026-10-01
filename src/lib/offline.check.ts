@@ -58,3 +58,42 @@ assert.ok(hs > hm && hm > hw, `plant HR ranking should be strong > mid > weak ($
 assert.ok(hs >= 65, `a strong plant HR manager should score 65+ (${hs})`)
 assert.ok(soft.every((s) => s <= 25), `software resumes should not fit an HR role (${soft})`)
 console.log('ok (plant HR)')
+
+// Word-table engineering JD (Indo Tech's own format): a transformer designer must beat a salesperson from the same industry.
+const engJd = `JOB DESCRIPTION
+Position Details
+Position Title: Assistant Manager – ElectricalDepartment: DesignReports To: Head – Design
+Candidate Profile
+Age: 26 years and above
+Minimum Education: B.E. / B. Tech in Electrical Engineering
+Desired Experience: 6 years above of relevant experience in electrical design of transformers
+Language: English
+Key Skills & Competencies
+Electrical design of Distribution and Power Transformers
+Transformer design calculations
+Short-circuit and thermal calculations
+Customer drawing preparation
+Position Responsibilities
+Prepare electrical designs for distribution and power transformers as per customer specifications.
+Prepare customer drawings and manufacturing drawings using AutoCAD.
+Estimate materials and prepare bills of materials for tenders.`
+const engReqs = offlineRequirements(engJd)
+const engScore = async (cv: string) => assemble('x', 'x.pdf', engReqs, await offlineEvaluate(engReqs, cv, 'x.pdf', embed), cv, false, 'offline').score
+const designer = await engScore(`Arun Design
+Design Engineer - Electrical, Example Transformers Ltd | 2018 to 2025
+Total experience: 7 years
+- Electrical design of distribution and power transformers up to 100 MVA.
+- Carried out transformer design calculations including short-circuit and thermal calculations.
+- Prepared customer drawings and manufacturing drawings in AutoCAD.
+- Prepared bills of materials and material estimates for tenders.
+Education: B.E. Electrical Engineering`)
+const seller = await engScore(`Vikram Sales
+Sales Manager, Example Power Products Ltd | 2012 to 2025
+Total experience: 13 years
+- Sold power and distribution transformers to utilities and EPC contractors.
+- Met sales targets and followed up on payments with customers.
+- Coordinated with the design team on customer specifications for tenders.
+Education: B.Tech Electrical Engineering`)
+console.log('\nEngineering JD:', { designer, seller })
+assert.ok(designer > seller + 10, `designer (${designer}) should clearly beat salesperson (${seller})`)
+console.log('ok (engineering JD)')
