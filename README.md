@@ -38,7 +38,7 @@ Upload one job description and a stack of resumes. Job Lens scores every candida
 
 **Screening**
 - 📝 **Job description**: upload, paste, or **Create JD** with Indo Tech Transformers Limited as the default company. There are templates for transformer design, testing, quality, production, service and commissioning, tender sales, purchase and projects, plus corporate roles. Set the department, seniority, openings, qualification, must-have skills, salary, work mode and working conditions.
-- 📄 **Resumes**: any number of PDF, .docx, text or image files. Scanned files are read with OCR in the browser.
+- 📄 **Resumes**: any number of PDF, .doc, .docx, text or image files. Scanned files are read with OCR in the browser.
 - 🎯 **Ranking**: match score (0–100), ATS readiness, evidence for each requirement, strengths, concerns and suggested interview questions.
 - 🔁 **Two engines**: **AI** (Claude, ChatGPT or Gemini, with your own key) or **Offline** (skills matching plus a small on-device language model, about 23 MB, cached after the first use).
 
@@ -110,7 +110,7 @@ Every push to `main` runs the checks and deploys to GitHub Pages (`.github/workf
 - **Offline mode** sends nothing anywhere. **AI mode** sends the JD and resume text straight from the browser to the provider you chose, using your own key. Keys are kept only in this browser.
 - Screenings, decisions, notes and interviews are stored **in this browser only**. Clearing browser data removes them, and colleagues do not see each other's screenings. A shared database is the next step for team use.
 - The login is a demo gate, not real authentication. For a public deployment, put a small server in front that holds the API key and handles sign-in.
-- Old `.doc` files are not supported; save them as `.docx` or PDF.
+- Legacy `.doc` files are supported alongside `.docx` and PDF.
 
 ## Tech stack
 

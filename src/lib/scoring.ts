@@ -67,7 +67,7 @@ export function assemble(
 
 // ---------- Resume helpers ----------
 
-const NAME_BAD = new Set('curriculum vitae resume profile summary objective background personal information career aspiration experience address street road nagar division estate page contact email mobile phone skills manager executive hr human resources engineer automobile industry india manufacturing responsibilities languages education canteen declaration hobbies hobby interests references reference key result areas achievements strengths details project projects generalist engineering'.split(' '))
+const NAME_BAD = new Set('curriculum vitae resume profile summary objective background personal information career aspiration experience address street road nagar division estate page contact email mobile phone skills manager executive hr human resources engineer automobile industry india manufacturing responsibilities languages education canteen declaration hobbies hobby interests references reference key result areas achievements strengths details project projects generalist engineering date birth marital status competencies competency relations synopsis administration management leadership core'.split(' '))
 const NAME_PENALTY = /\b(?:ltd|limited|pvt|inc|corp|corporation|company|industries|solutions|technologies|systems|services|group|exports|street|road|nagar|district|city|chennai|b\.e|b\.tech|mba|msw|curriculum|vitae|resume|profile|summary|objective|personal|information|experience|address|skills|manager|executive|developer|designer|analyst|consultant|officer|specialist|supervisor|director|head|human resources|career|achievement|organisational|professional|snapshot|expertise|competence)\b/i
 const HONORIFIC = /^(?:mr|mrs|ms|miss|dr|shri|smt|sri)\.?\s+/i
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/
@@ -76,9 +76,10 @@ function titleName(value: string) {
   const spaced = value.replace(/^(\p{L}+)\.((?:\p{L}\.)*\p{L})$/u, '$1 $2')
     .replace(/^(\p{L}+)\.(\p{L})$/u, '$1 $2')
     .replace(/((?:\p{L}\.){1,})(?=\p{Lu}{2,})/gu, '$1 ')
+  const allCaps = value === value.toUpperCase() // mixed case is how the person writes it ("Varaprasad GVB")
   return spaced.split(/\s+/).map((part) => {
     if (/^(?:\p{L}\.)+(?:\p{L})?$/u.test(part)) return part.toUpperCase()
-    return part === part.toUpperCase() ? part.toLocaleLowerCase().replace(/^\p{L}/u, (c) => c.toLocaleUpperCase()) : part
+    return allCaps ? part.toLocaleLowerCase().replace(/(^|['’-])\p{L}/gu, (c) => c.toLocaleUpperCase()) : part
   }).join(' ')
 }
 
@@ -101,7 +102,7 @@ function validName(value: string) {
 /** Candidate name: the best-scoring name-like line near the top of the resume, cross-checked with the file name and email. */
 export function guessName(text: string, fileName: string) {
   const all = text.split('\n').slice(0, 50).map((l) => l.slice(0, 300))
-  const refs = all.findIndex((l) => /^\s*(?:references?|referees?)\b/i.test(l))
+  const refs = all.findIndex((l) => /^\s*(?:references?|referees?)\s*:?\s*$/i.test(l))
   const lines = refs >= 0 ? all.slice(0, refs) : all
   const head = lines.slice(0, 15) // contact details of the candidate, not referees further down
   const file = fileCandidate(fileName)
@@ -117,8 +118,8 @@ export function guessName(text: string, fileName: string) {
     const words = value.toLocaleLowerCase().match(/\p{L}{4,}/gu) ?? []
     const n = value.split(/[\s.]+/).filter(Boolean).length
     const known = words.some((w) => [...fileWords, ...emailWords].some((k) => k.includes(w) || w.includes(k)))
-    let score = source === 'resume' ? 30 + Math.max(0, 10 - line) : 18 + (naukri ? 20 : 0) + ([...fileWords].some((w) => emailWords.has(w) || [...emailWords].some((e) => e.includes(w))) ? 42 : 0)
-    if (source === 'resume' && known) score += 25
+    let score = source === 'resume' ? 30 + Math.max(0, 10 - line) : 18 + (naukri ? 45 : 0) + ([...fileWords].some((w) => [...emailWords].some((e) => e.includes(w) || w.includes(e))) ? 30 : 0)
+    if (source === 'resume' && known) score += 35
     if (source === 'resume' && naukri && fileWords.size && !known) score -= 10
     if (source === 'resume' && contactAt.some((at) => Math.abs(at - line) <= 3)) score += 12
     if (/^\s*name\s*:/i.test(raw)) score += 8
@@ -141,12 +142,15 @@ export function yearsOf(text: string, fileName?: string) {
   const tag = fileName?.match(/\[(\d{1,2})y(?:_\d+m)?\]/i)
   if (tag && +tag[1] <= 45) return +tag[1]
   const context: number[] = []
+  const total: number[] = []
   for (const raw of text.split('\n')) {
-    const line = raw.slice(0, 500).replace(/\b(?:age|dob|d\.o\.b|date of birth|born)\b[^|,;]*/gi, '')
+    const line = raw.slice(0, 500).replace(/\b(?:age|dob|d\.o\.b|date of birth|born)\b\D{0,20}[\d./-]*/gi, '')
     const ys = [...line.matchAll(YEARS)].map((m) => +m[1]).filter((y) => y <= 45)
+    if (/\btotal\b/i.test(line)) total.push(...ys)
     if (/\b(?:experience|experienced|employment|career|total)\b/i.test(line)) context.push(...ys)
   }
-  return context.length ? Math.max(...context) : null
+  const pick = total.length ? total : context // a stated total beats the longest single job
+  return pick.length ? Math.max(...pick) : null
 }
 
 const link = (u: string) => 'https://' + u.replace(/^https?:\/\//i, '').replace(/[.,;:)]+$/, '')

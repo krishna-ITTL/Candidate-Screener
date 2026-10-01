@@ -50,3 +50,20 @@ assert.deepEqual(extractContacts(cv), { email: 'johndoe@email.com', phone: '(123
 assert.deepEqual(extractContacts('Asha\n2019 - 2021 | +91 98765 43210 | https://github.com/asha-k | www.asha.dev.'),
   { email: '', phone: '+91 98765 43210', linkedin: '', github: 'https://github.com/asha-k', portfolio: 'https://www.asha.dev' })
 console.log('ok', { score: r1.score, ats: r1.ats.score })
+
+// Legacy .doc: corrupt or non-Word bytes fail with a friendly message, never a crash.
+const { isCompoundWord, readWord } = await import('./word')
+assert.equal(isCompoundWord(new TextEncoder().encode('{\rtf1 hello}')), false)
+const fake = new Uint8Array(4096); fake.set([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])
+assert.equal(isCompoundWord(fake), true)
+await assert.rejects(readWord(fake), /Could not read this Word file/)
+console.log('ok doc')
+
+// Second review: reference numbers, headings vs Naukri file names, casing, age next to experience, totals.
+assert.equal(guessName('Reference No: 123\nRavi Kumar\nravi@x.com', 'x.pdf'), 'Ravi Kumar')
+assert.equal(guessName('Core Competencies\nTeam Leadership\nPeople Management\nx@y.com', 'Naukri_SKumar[10y_0m].pdf'), 'S Kumar')
+assert.equal(guessName('Varaprasad GVB\nvaram@x.com', 'x.pdf'), 'Varaprasad GVB')
+assert.equal(guessName("SEAN O'BRIEN\nsean@x.com", 'x.pdf'), "Sean O'Brien")
+assert.equal(yearsOf('Age 42 Experience 17 years'), 17)
+assert.equal(yearsOf('Experience at ABC Ltd: 3 years\nTotal Experience: 2 years 6 months'), 2)
+console.log('ok names 2')
