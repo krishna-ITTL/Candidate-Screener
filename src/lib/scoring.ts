@@ -154,10 +154,10 @@ export function yearsOf(text: string, fileName?: string) {
 }
 
 const MONTHS = 'jan feb mar apr may jun jul aug sep oct nov dec'.split(' ')
-const DATE = String.raw`(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[\s’'.,-]*)?(?<!\d)((?:19|20)\d{2})(?!\d)` // not inside phone numbers or PIN codes
+const DATE = String.raw`(?:\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[\s’'.,-]*)?(?<!\d)((?:19|20)\d{2})(?!\d)` // not inside phone numbers or PIN codes
 const RANGE = new RegExp(`${DATE}\\s*(?:-|–|—|to|till)+\\s*(?:${DATE}|(till date|to date|present|current|now|date))`, 'gi')
 // Degree words only; "Scrum Master" or a college as employer are still jobs.
-const EDUCATION = /\b(?:education|university|degree|bachelor|mba|msw|b\.?e\b|b\.?tech|b\.?com|b\.?sc|diploma|hsc|sslc)\b/i
+const EDUCATION = /\b(?:education|university|degree|bachelor|mba|msw|b\.e\b|b\.?tech|b\.?com|b\.?sc|diploma|hsc|sslc)\b/i
 
 /** Total years from employment date ranges ("Sep'2018 to Sep'2021", "2021 to till date"), overlaps merged.
  *  "Till date" means the latest date written in the resume, not today, so the same resume always scores the same.
@@ -175,7 +175,8 @@ function yearsFromDates(text: string) {
     for (const m of line.matchAll(RANGE)) {
       const start = month(m[1], m[2], false)
       const end = m[5] ? latest : month(m[3], m[4], true)
-      if (m[5] && end <= start) unknown = true
+      // Nothing written after the current job's start year: we cannot tell how long it has run.
+      if (m[5] && Math.floor(latest / 12) <= +m[2]) unknown = true
       else if (end > start && end - start < 45 * 12) spans.push([start, end])
     }
   })
@@ -188,7 +189,7 @@ function yearsFromDates(text: string) {
     else { months += e - s; [s, e] = [a, b] }
   }
   months += e - s
-  return Math.floor(months / 12) || null
+  return Math.floor(months / 12)
 }
 
 const link = (u: string) => 'https://' + u.replace(/^https?:\/\//i, '').replace(/[.,;:)]+$/, '')

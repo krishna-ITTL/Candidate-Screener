@@ -38,8 +38,8 @@ let queue: Promise<unknown> = Promise.resolve()
 let generation = 0 // bumped by Reset, so jobs still in flight do not refill the memo
 let modelDown = false // after one failed download, background pre-embedding stops until Analyse tries again
 
-async function embedMissing(texts: string[]) {
-  const gen = generation
+async function embedMissing(texts: string[], gen: number) {
+  if (gen !== generation) return // queued before a Reset: that resume is gone
   for (const t of new Set(texts)) {
     if (memo.has(t)) continue
     const [v] = await browserEmbed([t])
@@ -50,7 +50,7 @@ async function embedMissing(texts: string[]) {
 
 export const cachedEmbed: Embed = (texts) => {
   const job = queue.then(async () => {
-    await embedMissing(texts)
+    await embedMissing(texts, generation)
     modelDown = false
     return texts.map((t) => (memo.get(t) ?? Float32Array.of()) as unknown as number[])
   })
@@ -60,7 +60,8 @@ export const cachedEmbed: Embed = (texts) => {
 export const clearEmbedCache = () => { memo.clear(); generation++ }
 /** Start embedding a resume in the background right after it is read, so Analyse only has the rubric left to do. */
 export const preEmbed = (resume: string) => {
-  queue = queue.then(() => (modelDown ? undefined : embedMissing(resumeLines(resume)).catch(() => { modelDown = true })))
+  const gen = generation
+  queue = queue.then(() => (modelDown ? undefined : embedMissing(resumeLines(resume), gen).catch(() => { modelDown = true })))
 }
 
 const STOP = new Set('the and for with our you your are will this that from have has into using use able across such etc their them they its per any all can who what when also well'.split(' '))
@@ -91,7 +92,7 @@ const RANK: Record<Level, number> = { missing: 0, partial: 1, met: 2 }
 const GENERIC = new Set('ensure ensuring manage managing handle handling support work working team company role roles including within other plant staff day keep lead leading drive driving across'.split(' '))
 /** Distinct, stemmed content words for the lexical match. */
 const contentWords = (s: string) => [...new Set((s.toLowerCase().match(/[a-z][a-z+#&]{2,}/g) ?? [])
-  .filter((w) => !STOP.has(w) && !GENERIC.has(w)).map((w) => w.replace(/(ing|ed|es|s)$/, '')))]
+  .filter((w) => !STOP.has(w) && !GENERIC.has(w)).map((w) => w.replace(/(ing|ed|(?<!s)s)$/, '').replace(/e$/, '')))] // compliance/compliances → complianc
 
 // ---------- Requirements ----------
 
@@ -104,7 +105,7 @@ const HEAD_REQ = /(requirement|qualification|must.have|skills|what you.ll need|w
 const HEAD_NICE = /(nice to have|preferred|bonus|good to have|desirable|plus)/i
 const HEAD_RESP = /(responsibilit|duties|what you.ll do|role|about the)/i
 // Sections that describe the company or the job, not the candidate: never scored.
-const HEAD_SKIP = /^(about (us|our|the company|the role|(?!the\b|you\b)[a-z])|(role|job|position) (overview|summary)|overview|company profile|compensation|salary|market salary|benefits|perks|how to apply|working conditions|potential career|career path|key performance|kpis?\b)/i
+const HEAD_SKIP = /^(about (us|our|the company|(?!the\b|you\b)[a-z])|(role|job|position) (overview|summary)|overview|company profile|compensation|salary|market salary|benefits|perks|how to apply|working conditions|potential career|career path|key performance|kpis?\b)/i
 
 function shortLabel(s: string) {
   const clean = s.replace(BULLET, '').replace(/[.;:]+$/, '').trim()
@@ -234,7 +235,7 @@ export async function offlineEvaluate(reqs: OfflineReq[], resume: string, fileNa
     if (words.length >= 3) resumeWords.forEach((set, i) => { const s = words.filter((w) => set.has(w)).length / words.length; if (s > share) { share = s; at = i } })
     const lex: Level = share >= T.lexMet ? 'met' : share >= T.lexPartial ? 'partial' : 'missing'
     const level = RANK[sem] >= RANK[lex] ? sem : lex
-    const line = RANK[lex] > RANK[sem] ? raw[at] : hit.line
+    const line = RANK[lex] > RANK[sem] ? `${raw[at]} ${raw[at + 1] ?? ''}`.trim() : hit.line
     return { skill: r.skill, level, evidence: level === 'missing' ? '' : clip(line) }
   })
 

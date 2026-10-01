@@ -157,9 +157,13 @@ const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
 
 // "IR" means industrial relations only in capitals and next to HR words; in a transformer plant it is also
 // insulation resistance ("IR, PI and ratio tests").
-const HR_NEAR = /\b(?:HR|ER)\b|\b(?:union|labou?r|welfare|relations|industrial|personnel|employee)/i
+const HR_NEAR = /\b(?:HR|ER)\b|\b(?:union|labou?r|welfare|relations|personnel|employee)/i
+const TEST_NEAR = /\b(?:PI|tan ?delta|megger|insulation|tests?|testing|transformers?|winding)\b/i
 function irHit(text: string) {
-  for (const m of text.matchAll(/(?<![\w.])IR(?![\w])/g)) if (HR_NEAR.test(text.slice(Math.max(0, m.index - 40), m.index + 42))) return true
+  for (const m of text.matchAll(/(?<![\w.])IR(?![\w])/g)) {
+    const near = text.slice(Math.max(0, m.index - 40), m.index + 42)
+    if (HR_NEAR.test(near) && !TEST_NEAR.test(near)) return true
+  }
   return false
 }
 

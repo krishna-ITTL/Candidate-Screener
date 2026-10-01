@@ -81,3 +81,11 @@ const both = offlineRequirements('Requirements\n- 3+ years with React, Redux and
 for (const s of ['React', 'React Native', 'Java', 'JavaScript', 'Statutory compliance']) assert.ok(both.includes(s), `${s} kept`)
 assert.ok(!both.includes('Compliance'), 'Compliance inside Statutory compliance is not double-counted')
 console.log('ok review 3')
+
+// Fourth review: year-only current jobs, "be", months inside words, IR next to transformer tests, plural stems, About the role.
+assert.equal(yearsOf('ABC Ltd 2010 - 2020\nXYZ Ltd 2020 - Present'), null)
+assert.equal(yearsOf('2012 - 2020 Plant HR, responsible to be the single point of contact'), 8)
+assert.equal(yearsOf('Junior 2015 - 2017 Officer'), 2)
+assert.ok(!ht('Performed IR and PI tests on industrial transformers', 'ir'))
+assert.ok(offlineRequirements('About the role\n- Handle grievances and domestic enquiries for workmen\n- Drive wage settlements with unions').length >= 2, 'duties under About the role are scored')
+console.log('ok review 4')
