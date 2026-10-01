@@ -10,7 +10,7 @@ import { loadHistory, saveHistory, type SavedRun } from '../lib/history'
 import { extractText } from '../lib/extract'
 import { evaluate, extractRequirements, friendlyError, PROVIDERS, type AiSettings } from '../lib/ai'
 import { assemble } from '../lib/scoring'
-import { browserEmbed, lexicalEmbed, offlineEvaluate, offlineRequirements, onModelProgress, type Embed } from '../lib/offline'
+import { cachedEmbed, clearEmbedCache, lexicalEmbed, offlineEvaluate, offlineRequirements, onModelProgress, preEmbed, type Embed } from '../lib/offline'
 import type { Decision, Requirement, Result, ResumeFile } from '../lib/types'
 import type { Interview } from '../lib/hr'
 
@@ -116,6 +116,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
       try {
         const { text, ocr } = await extractText(r.file, (progress, note) => patch(r.id, { progress, note }))
         patch(r.id, { status: 'ready', text, ocr, progress: 1 })
+        if (mode === 'offline') preEmbed(text)
       } catch (e) {
         patch(r.id, { status: 'error', note: friendlyError(e) })
       }
@@ -135,7 +136,6 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
     setTotal(batch.length)
     setStage(0)
     requestAnimationFrame(() => progressRef.current && scrollTo(progressRef.current, { offset: -100 }))
-    await new Promise((r) => setTimeout(r, 450))
 
     const useAi = aiReady
     setNote('')
@@ -150,8 +150,8 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
       if (!useAi) {
         onModelProgress((p, msg) => setNote(`${msg} ${Math.round(p * 100)}%`))
         try {
-          await browserEmbed(['warm up'])
-          embed = browserEmbed
+          await cachedEmbed(['warm up'])
+          embed = cachedEmbed
         } catch {
           setNote('Offline model unavailable, using word matching')
         }
@@ -172,7 +172,6 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
       })
 
       setStage(3)
-      await new Promise((r) => setTimeout(r, 500))
       // Stable, deterministic order: score, then ATS, then file name.
       out.sort((a, b) => b.score - a.score || b.ats.score - a.ats.score || a.fileName.localeCompare(b.fileName))
       setResults(out)
@@ -190,6 +189,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
     if (results.length && !confirm('Clear the job description, all resumes and the current ranking?')) return
     setJd(''); setFiles([]); setResults([]); setReqs([]); setHistory(runs); setDecisions({}); setNotes({}); setInterviews({}); setRun(null); setErrors([]); setStage(-1); setDone(0); setTotal(0)
     setJdKey((k) => k + 1)
+    clearEmbedCache()
     setStep(1)
     scrollTo(0)
     showToast('Cleared. Ready for a new screening.')

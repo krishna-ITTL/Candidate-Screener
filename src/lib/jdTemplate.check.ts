@@ -34,3 +34,16 @@ for (const junk of ['66,000', 'reliable partner', 'drawing release on schedule',
 }
 assert.ok(offlineRequirements(jd).some((r) => r.skill === 'AutoCAD' && r.importance === 'essential'), 'must-have skills are essential')
 console.log('ok jd', offlineRequirements(jd).length, 'requirements')
+
+// HR roles: recruiters get the talent acquisition template, every other HR role the plant HR & IR one.
+for (const role of ['HR Manager', 'Manager - HR & IR', 'Personnel Officer', 'HR & Admin Executive']) {
+  assert.ok(pickFamily(brief({ role })).skills.includes('Industrial relations'), `${role} → plant HR`)
+}
+assert.ok(pickFamily(brief({ role: 'Manager', department: 'Human Resources' })).skills.includes('Industrial relations'), 'department-only HR → plant HR')
+for (const role of ['Talent Acquisition Executive', 'Recruiter']) assert.ok(!pickFamily(brief({ role })).skills.includes('Industrial relations'), `${role} → TA`)
+const hrJd = templateJd(brief({ role: 'HR Manager', seniority: 'Manager', department: 'Human Resources' }))
+const hrReqs = offlineRequirements(hrJd)
+assert.equal(hrReqs.find((r) => r.kind === 'years')?.years, 10, 'Manager = 10-15 years, scored from the lower bound')
+for (const junk of ['we are hiring', 'own outcomes', 'sales']) assert.ok(!hrReqs.some((r) => r.skill.toLowerCase().includes(junk)), `"${junk}" should not be a requirement`)
+assert.ok(!hrReqs.some((r) => r.skill === 'Compliance'), 'Statutory compliance is not double-counted as Compliance')
+console.log('ok hr template', hrReqs.length, 'requirements')

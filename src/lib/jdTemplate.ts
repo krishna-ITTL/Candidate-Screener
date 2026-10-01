@@ -123,7 +123,7 @@ const ELECTRICAL: Family = {
 
 const FAMILIES: Family[] = [
   {
-    test: /talent|recruit|hiring|\bhr\b|human resource|people/i,
+    test: /talent|recruit|hiring/i,
     team: 'Human Resources',
     resp: ['Own end-to-end recruitment across engineering, production, sales and corporate roles.', 'Build talent pipelines through sourcing, referrals, job boards and campus hiring from engineering colleges.', 'Partner with hiring managers on workforce plans, role requirements and interview design.', 'Run employer branding for early-career and experienced candidates.', 'Report hiring metrics and improve the candidate experience.'],
     skills: ['Full-cycle recruitment and sourcing', 'ATS and LinkedIn Recruiter', 'Stakeholder management', 'Offer negotiation', 'Employer branding'],
@@ -131,6 +131,17 @@ const FAMILIES: Family[] = [
     nice: ['Experience hiring for manufacturing or engineering companies', 'Data-driven recruiting dashboards'],
     kpis: ['Time-to-hire and time-to-fill', 'Offer acceptance rate', 'Quality of hire (90-day retention)', 'Hiring manager satisfaction'],
     path: ['Talent Acquisition Executive', 'Talent Acquisition Manager', 'Head of Talent Acquisition'],
+  },
+  {
+    // Plant HR: industrial relations and statutory compliance come first in a manufacturing company.
+    test: /\bhr\b|human resource|personnel|industrial relation|\bir\b|people|welfare/i,
+    team: 'Human Resources',
+    resp: ['Manage industrial relations and keep a cordial relationship with unions and workmen, including wage settlements.', 'Ensure statutory compliance under the Factories Act, PF, ESI, CLRA and other labour laws, and handle inspections and returns.', 'Run payroll, time office and attendance for staff, workmen and contract labour.', 'Manage contractors and contract labour on the shop floor.', 'Handle grievances, disciplinary proceedings and domestic enquiries fairly and on time.', 'Drive employee welfare, engagement, training and performance management across the plant.', 'Plan manpower and lead recruitment and onboarding for plant and office roles.'],
+    skills: ['Industrial relations', 'Statutory compliance', 'Labour law', 'Payroll', 'Contract labour management', 'Grievance handling', 'Performance management', 'Training and development'],
+    qual: 'MBA / MSW / MA in HR or Personnel Management',
+    nice: ['HR experience in a heavy engineering or electrical manufacturing plant', 'Setting up HR for a greenfield plant', 'HRMS or SAP HR'],
+    kpis: ['Industrial harmony (no lost man-days)', 'Statutory compliance with zero penalties', 'Payroll accuracy and on-time salary', 'Attrition and time-to-fill', 'Training hours per employee'],
+    path: ['HR Executive', 'HR Manager', 'Senior Manager HR & IR', 'Head of HR'],
   },
   {
     test: /software|developer|programmer|sde|devops|architect|\bit\b|erp|sap/i,

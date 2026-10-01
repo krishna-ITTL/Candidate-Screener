@@ -40,3 +40,21 @@ const good = await taScore('ta-good'), weak = await taScore('ta-weak')
 assert.ok(taReqs.some((r) => r.kind === 'bullet'), 'plain-language bullets become requirements')
 assert.ok(good >= 70 && weak <= 30, `TA lead should score high (${good}), support exec low (${weak})`)
 console.log('\nok (non-tech)')
+
+// Plant HR Manager JD from Create JD: depth of IR/compliance experience and seniority decide the order.
+import { templateJd, DEFAULT_COMPANY, DEFAULT_INDUSTRY, DEFAULT_WEBSITE } from './jdTemplate'
+const hrJd = templateJd({ role: 'HR Manager', location: 'Kancheepuram, Tamil Nadu', industry: DEFAULT_INDUSTRY, experience: '', company: DEFAULT_COMPANY, notes: '',
+  website: DEFAULT_WEBSITE, department: 'Human Resources', seniority: 'Manager', employment: 'Full-time', workMode: 'On-site', openings: '1',
+  qualification: 'MBA / MSW in HR', salary: '', mustHave: '', niceToHave: '', reportsTo: '', conditions: '' })
+const hrReqs = offlineRequirements(hrJd)
+const hrScore = async (f: string) => {
+  const cv = readFileSync(`src/lib/fixtures/${f}.txt`, 'utf8')
+  return assemble(f, `${f}.pdf`, hrReqs, await offlineEvaluate(hrReqs, cv, `${f}.pdf`, embed), cv, false, 'offline').score
+}
+const [hs, hm, hw] = [await hrScore('hr-strong'), await hrScore('hr-mid'), await hrScore('hr-weak')]
+const soft = await Promise.all(['priya', 'arjun', 'john'].map(hrScore))
+console.log('\nHR Manager JD:', { strong: hs, mid: hm, weak: hw, software: soft })
+assert.ok(hs > hm && hm > hw, `plant HR ranking should be strong > mid > weak (${hs}, ${hm}, ${hw})`)
+assert.ok(hs >= 65, `a strong plant HR manager should score 65+ (${hs})`)
+assert.ok(soft.every((s) => s <= 25), `software resumes should not fit an HR role (${soft})`)
+console.log('ok (plant HR)')

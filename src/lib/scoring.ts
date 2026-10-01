@@ -150,7 +150,45 @@ export function yearsOf(text: string, fileName?: string) {
     if (/\b(?:experience|experienced|employment|career|total)\b/i.test(line)) context.push(...ys)
   }
   const pick = total.length ? total : context // a stated total beats the longest single job
-  return pick.length ? Math.max(...pick) : null
+  return pick.length ? Math.max(...pick) : yearsFromDates(text)
+}
+
+const MONTHS = 'jan feb mar apr may jun jul aug sep oct nov dec'.split(' ')
+const DATE = String.raw`(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[\s’'.,-]*)?(?<!\d)((?:19|20)\d{2})(?!\d)` // not inside phone numbers or PIN codes
+const RANGE = new RegExp(`${DATE}\\s*(?:-|–|—|to|till)+\\s*(?:${DATE}|(till date|to date|present|current|now|date))`, 'gi')
+// Degree words only; "Scrum Master" or a college as employer are still jobs.
+const EDUCATION = /\b(?:education|university|degree|bachelor|mba|msw|b\.?e\b|b\.?tech|b\.?com|b\.?sc|diploma|hsc|sslc)\b/i
+
+/** Total years from employment date ranges ("Sep'2018 to Sep'2021", "2021 to till date"), overlaps merged.
+ *  "Till date" means the latest date written in the resume, not today, so the same resume always scores the same.
+ *  If a current job has no later date to measure to, the total is unknown (null) rather than undercounted. */
+function yearsFromDates(text: string) {
+  const lines = text.split('\n').map((l) => l.slice(0, 500))
+  const month = (m: string | undefined, y: string, end: boolean) => +y * 12 + (m ? MONTHS.indexOf(m.toLowerCase().slice(0, 3)) : end ? 11 : 0)
+  let latest = 0
+  for (const m of text.matchAll(new RegExp(DATE, 'gi'))) latest = Math.max(latest, month(m[1], m[2], true))
+  const spans: [number, number][] = []
+  let unknown = false
+  lines.forEach((line, i) => {
+    // A bare date line right under a degree ("MBA, Anna University" then "2008-2010") is education too.
+    if (EDUCATION.test(line) || (line.trim().length < 25 && EDUCATION.test(lines[i - 1] ?? ''))) return
+    for (const m of line.matchAll(RANGE)) {
+      const start = month(m[1], m[2], false)
+      const end = m[5] ? latest : month(m[3], m[4], true)
+      if (m[5] && end <= start) unknown = true
+      else if (end > start && end - start < 45 * 12) spans.push([start, end])
+    }
+  })
+  if (unknown || !spans.length) return null
+  spans.sort((a, b) => a[0] - b[0])
+  let months = 0
+  let [s, e] = spans[0]
+  for (const [a, b] of spans.slice(1)) {
+    if (a <= e) e = Math.max(e, b)
+    else { months += e - s; [s, e] = [a, b] }
+  }
+  months += e - s
+  return Math.floor(months / 12) || null
 }
 
 const link = (u: string) => 'https://' + u.replace(/^https?:\/\//i, '').replace(/[.,;:)]+$/, '')

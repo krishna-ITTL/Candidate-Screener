@@ -98,12 +98,23 @@ Onboarding
 Employer branding
 ATS|applicant tracking system
 Workday
-HRIS
-Payroll
+HRIS|hrms|hr-mis|hrmis
+Payroll|payroll processing|salary processing|wage administration
 Employee relations
-Performance management
+Performance management|pms|performance appraisal|appraisals
 Compensation and benefits|compensation|c&b
-Labour law|labor law|employment law
+Labour law|labor law|employment law|labour laws|labor laws|labour legislation|labour legislations|industrial disputes act
+Industrial relations|ir|industrial relation|union management|trade union|wage settlement|long term settlement
+Statutory compliance|statutory compliances|labour compliance|factories act|epf|esic|clra
+Contract labour management|contract labour|contract labor|contract workmen|contract workforce
+Time office|attendance management|timekeeping
+Employee welfare|labour welfare|welfare activities|canteen management
+Employee engagement|engagement activities
+Training and development|training & development|training need analysis
+Manpower planning|workforce planning|manpower budgeting
+HR policies|hr policy|policy making|policy formulation
+Grievance handling|grievance redressal|employee grievances|grievance handling
+Disciplinary proceedings|domestic enquiry|domestic inquiry|disciplinary action
 Sales|business development
 Account management|key account management
 Lead generation
@@ -144,8 +155,20 @@ export const SKILLS = RAW.split('\n').map((line) => {
 
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
 
+// "IR" means industrial relations only in capitals and next to HR words; in a transformer plant it is also
+// insulation resistance ("IR, PI and ratio tests").
+const HR_NEAR = /\b(?:HR|ER)\b|\b(?:union|labou?r|welfare|relations|industrial|personnel|employee)/i
+function irHit(text: string) {
+  for (const m of text.matchAll(/(?<![\w.])IR(?![\w])/g)) if (HR_NEAR.test(text.slice(Math.max(0, m.index - 40), m.index + 42))) return true
+  return false
+}
+
+/** Removes every whole-word occurrence of a term, so overlapping skills can be told apart. */
+export const stripTerm = (text: string, term: string) => text.replace(new RegExp(`(?<![\\w.])${esc(term)}(?![\\w])`, 'gi'), ' ')
+
 export function hasTerm(text: string, term: string) {
   // (?<![\w]) instead of \b so terms like "C#", ".NET" and "C++" still match
+  if (term === 'ir') return irHit(text)
   return new RegExp(`(?<![\\w.])${esc(term)}(?![\\w])`, 'i').test(text)
 }
 
@@ -195,6 +218,19 @@ const RELATED: Record<string, string[]> = {
   'Employer branding': ['Social media marketing', 'Content marketing'],
   Workday: ['HRIS'],
   HRIS: ['Workday'],
+  'Industrial relations': ['Employee relations', 'Labour law', 'Grievance handling'],
+  'Statutory compliance': ['Labour law', 'Payroll', 'Compliance'],
+  'Labour law': ['Statutory compliance', 'Industrial relations'],
+  'Contract labour management': ['Statutory compliance', 'Industrial relations'],
+  'Time office': ['Payroll'],
+  Payroll: ['Time office', 'Statutory compliance'],
+  'Employee welfare': ['Employee engagement', 'Employee relations'],
+  'Employee engagement': ['Employee welfare'],
+  'Training and development': ['Performance management'],
+  'HR policies': ['Employee relations'],
+  'Grievance handling': ['Employee relations', 'Industrial relations'],
+  'Disciplinary proceedings': ['Industrial relations', 'Labour law'],
+  'Manpower planning': ['Recruitment'],
   'Team leadership': ['Mentoring', 'Project management'],
   Mentoring: ['Team leadership'],
   'Stakeholder management': ['Communication', 'Project management'],
