@@ -89,3 +89,34 @@ assert.equal(yearsOf('Junior 2015 - 2017 Officer'), 2)
 assert.ok(!ht('Performed IR and PI tests on industrial transformers', 'ir'))
 assert.ok(offlineRequirements('About the role\n- Handle grievances and domestic enquiries for workmen\n- Drive wage settlements with unions').length >= 2, 'duties under About the role are scored')
 console.log('ok review 4')
+
+// Candidate tracker: profile fields come from the resume only when written there.
+const { extractProfile } = await import('./scoring')
+const prof = extractProfile([
+  'Ravi Kumar', 'Current CTC: 15.5 lpa, Expected CTC: (Nego.), Notice Period: 1 month', 'Date of Birth: 13 th March 1991', 'Native: Madurai',
+  'Experience', 'Assistant Manager - Sales with C&S Electric Ltd. at Agra base location.', 'Education', 'MBA (Marketing), Anna University', 'B.E. Electrical',
+].join('\n'))
+assert.deepEqual(prof, { education: 'MBA (Marketing)', dob: '13 th March 1991', age: '', native: 'Madurai', currentCompany: 'C&S Electric Ltd.',
+  currentLocation: 'Agra', noticePeriod: '1 month', presentCtc: '15.5 lpa', expectedCtc: '(Nego.)' })
+assert.equal(extractProfile('Ready to be part of the team\nUsed Windows ME/XP daily').education, '', '"be" and Windows ME are not degrees')
+assert.equal(extractProfile('Company: Meiden T&D India Ltd.').currentCompany, 'Meiden T&D India Ltd')
+const { jdTitle, jdDepartment } = await import('./jdTemplate')
+const wordJd = 'JOB DESCRIPTION\nPosition Details\nPosition Title: Assistant Manager – ElectricalDepartment: DesignReports To: Head – Design\nCandidate Profile\nAge: 26 years and above\nGender: Male / Female\nDesired Experience: 8 years above of relevant experience\nKey Skills & Competencies\nTransformer design calculations'
+assert.deepEqual([jdTitle(wordJd), jdDepartment(wordJd)], ['Assistant Manager – Electrical', 'Design'])
+const wordReqs = offlineRequirements(wordJd)
+assert.equal(wordReqs.find((r) => r.kind === 'years')?.years, 8, 'years from experience, never from age')
+assert.ok(!wordReqs.some((r) => /age|gender/i.test(r.skill)), 'age and gender are never requirements')
+assert.ok(wordReqs.some((r) => r.skill === 'Transformer design calculations'), 'plain skill lines in a Word-table JD are requirements')
+console.log('ok tracker profile')
+
+// Tracker review: plain requirement lines, pay sections, HR duties, About-the-role prose, "-wise" wording.
+const plain = offlineRequirements('Accountant\nRequirements\nB.Com with 3 years experience in Tally\nKnowledge of GST filing').map((r) => r.skill)
+assert.ok(plain.includes('Tally') && plain.includes('3+ years experience') && plain.includes('GST'), `plain requirement lines are read (${plain})`)
+assert.ok(!offlineRequirements('Engineer\nRequirements\n- AutoCAD\nCompensation\n- 9-12 LPA plus incentives').some((r) => /lpa/i.test(r.skill)), 'pay section is never scored')
+const duties = offlineRequirements('Responsibilities\n- Compensation and benefits administration\n- Salary benchmarking and payroll\n- Gender diversity initiatives').map((r) => r.skill)
+assert.equal(duties.length, 3, `HR duties about pay or gender are kept (${duties})`)
+assert.equal(offlineRequirements('About the Role\nWe are a fast-growing startup building tools for creators.\nYou will join a team of five designers.').length, 0, 'About-the-role prose is not scored')
+const wise = 'HR Executive\nIndo Tech | Chennai | Human Resources | Full-time\n- Prepare department-wise and designation-wise manpower MIS'
+assert.deepEqual([jdTitle(wise), jdDepartment(wise)], ['HR Executive', 'Human Resources'])
+const slow = Date.now(); jdTitle('Position Title: a' + ' '.repeat(100_000) + 'b'); assert.ok(Date.now() - slow < 200, 'no backtracking on long whitespace')
+console.log('ok tracker review')

@@ -101,11 +101,17 @@ export interface OfflineReq extends Requirement { kind: 'skill' | 'years' | 'bul
 // PDFs and Word files use many bullet glyphs, incl. private-use U+F0B7 and a stray U+0087 from Symbol fonts.
 const BULLET = /^\s*(?:[-*•●▪◦·\u0087�]|\d+[.)])\s*/
 const INLINE_BULLET = /\s[•●▪◦\u0087�]\s*/g
-const HEAD_REQ = /(requirement|qualification|must.have|skills|what you.ll need|who you are|experience)/i
+const HEAD_REQ = /(requirement|qualification|must.have|skills|competenc|candidate profile|eligibility|what you.ll need|who you are|experience)/i
 const HEAD_NICE = /(nice to have|preferred|bonus|good to have|desirable|plus)/i
 const HEAD_RESP = /(responsibilit|duties|what you.ll do|role|about the)/i
 // Sections that describe the company or the job, not the candidate: never scored.
-const HEAD_SKIP = /^(about (us|our|the company|(?!the\b|you\b)[a-z])|(role|job|position) (overview|summary)|overview|company profile|compensation|salary|market salary|benefits|perks|how to apply|working conditions|potential career|career path|key performance|kpis?\b)/i
+const HEAD_SKIP = /^(position details|about (us|our|the company|(?!the\b|you\b)[a-z])|(role|job|position) (overview|summary)|overview|company profile|compensation|salary|market salary|benefits|perks|how to apply|working conditions|potential career|career path|key performance|kpis?\b)/i
+
+// Personal characteristics and pay are never requirements. Only label-shaped lines ("Age: 26 years and above",
+// "Maximum Monthly Salary: as per norms"), so duties like "Compensation and benefits administration" stay.
+const PERSONAL = /^\W*(?:age|gender|sex|marital status|religion|caste|nationality|date of birth|dob)\s*(?:[:\-–(]|\d|limit|between|of\b)/i
+const PAY = /^\W*(?:(?:maximum|minimum|expected|monthly|annual|gross|fixed)\s+)*(?:salary|ctc|compensation|package|remuneration|pay)\s*(?:[:\-–(]|\d|range|between|per\b|up\s*to|as per)/i
+const ADVANTAGE = /^\W*(?:added advantage|advantage|preferred|desirable|nice to have|good to have)\b/i
 
 function shortLabel(s: string) {
   const clean = s.replace(BULLET, '').replace(/[.;:]+$/, '').trim()
@@ -131,16 +137,27 @@ export function offlineRequirements(jd: string): OfflineReq[] {
   const reqs: OfflineReq[] = []
   const seen = new Set<string>()
   let section: 'req' | 'nice' | 'resp' | 'other' | 'skip' = 'other'
+  // Word-table JDs (like Indo Tech's own) list skills and duties as plain lines; JDs with bullet glyphs keep prose out.
+  const plainLines = (jd.match(/^\s*[-*•●▪◦·\u0087�]/gm) ?? []).length < 3
+  let aboutSection = false // "About the role" prose describes the job, not the candidate
   for (const line of logicalLines(jd)) {
     const isBullet = BULLET.test(line)
-    if (!isBullet && line.length < 60) {
-      if (HEAD_SKIP.test(line)) section = 'skip'
-      else if (HEAD_NICE.test(line)) section = 'nice'
-      else if (HEAD_REQ.test(line)) section = 'req'
-      else if (HEAD_RESP.test(line)) section = 'resp'
+    // A section switch is a short line without "Label: value" text. It is still read for skills and years
+    // ("B.Com with 3 years experience in Tally"), it just never becomes a bullet requirement itself.
+    let heading = false
+    if (!isBullet && line.length < 60 && !/:\s*\S/.test(line)) {
+      const next = HEAD_SKIP.test(line) ? 'skip' : HEAD_NICE.test(line) ? 'nice' : HEAD_REQ.test(line) ? 'req' : HEAD_RESP.test(line) ? 'resp' : null
+      if (next) {
+        heading = true
+        section = next
+        aboutSection = next === 'resp' && /about the/i.test(line)
+      }
     }
     if (section === 'skip') continue
-    const importance = section === 'nice' ? 'preferred' : 'essential'
+    // "Age: 26 years" is never a requirement, nor 26 years of experience.
+    if (!heading && (PERSONAL.test(line) || PAY.test(line))) continue
+    const item = isBullet || (plainLines && !heading && !aboutSection && section !== 'other' && line.length >= 15 && line.length <= 220 && !/:$/.test(line))
+    const importance = section === 'nice' || ADVANTAGE.test(line) ? 'preferred' : 'essential'
     // A responsibility bullet is scored by meaning as a whole; a skill it merely mentions ("…production, sales and corporate roles") is not a requirement.
     const found = section === 'resp' ? [] : findSkills(line)
     // "Statutory compliance" already covers its "compliance": a shorter skill counts only if it also appears outside
@@ -161,11 +178,11 @@ export function offlineRequirements(jd: string): OfflineReq[] {
     }
     // Bullets without a known skill still matter ("mentor junior developers"): keep them as meaning-based requirements.
     // Responsibilities describe the day-to-day work, so they are always compared by meaning.
-    if (isBullet && section !== 'other' && (section === 'resp' || !skills.length)) {
+    if (item && section !== 'other' && (section === 'resp' || !skills.length)) {
       const label = shortLabel(line)
       if (!seen.has(label)) {
         seen.add(label)
-        reqs.push({ kind: 'bullet', skill: label, text: line.replace(BULLET, ''), importance: section === 'req' ? 'essential' : 'preferred' })
+        reqs.push({ kind: 'bullet', skill: label, text: line.replace(BULLET, ''), importance: section === 'req' && importance === 'essential' ? 'essential' : 'preferred' })
       }
     }
   }

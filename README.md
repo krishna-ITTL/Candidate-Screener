@@ -53,6 +53,7 @@ Upload one job description and a stack of resumes. Job Lens scores every candida
 
 **Reporting**
 - 📗 **Excel report per screening**: the Indo Tech logo, a Summary sheet (received, screened, shortlisted, on hold, rejected, averages, requirement coverage), and one sheet each for Shortlisted, On hold, Rejected, Undecided and All candidates.
+- 📋 **Candidate tracker**: HR's own 24-column tracker (S.No to Remarks), ready to paste into their sheet. Education, DOB, current company and location, notice period and CTC are filled in when the resume states them; Stage 1 - HR follows the Shortlist / Hold / Reject decision. DOB, age and native place are recorded for HR only and never affect the score.
 - 🗓️ **Monthly report**: totals across every screening in a month, by role, with interviews and shortlisted candidates, downloadable as Excel.
 - 🕘 **Recent screenings**: every finished run is saved with its decisions, notes and interviews, and reopens in one click.
 

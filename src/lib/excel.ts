@@ -2,6 +2,7 @@ import type { Cell, Worksheet } from 'exceljs'
 import type { Decision, Requirement, Result } from './types'
 import { describeInterview, formatWhen, MODE_LABEL, monthly, type Interview } from './hr'
 import type { SavedRun } from './history'
+import { jdDepartment } from './jdTemplate'
 
 export interface Report {
   title: string
@@ -260,4 +261,59 @@ export async function buildMonthlyWorkbook(history: SavedRun[], month: string, l
 
 export async function downloadMonthlyExcel(history: SavedRun[], month: string) {
   await save(await buildMonthlyWorkbook(history, month, await fetchLogo()), `IndoTech-hiring-report-${month}.xlsx`)
+}
+
+// ---------- HR's candidate tracker ----------
+// Same 24 columns, in the same order and spelling, as the tracker HR already keeps, so rows paste straight in.
+
+export const TRACKER_COLUMNS = ['S.No', 'Date', 'Candidate Name', 'DOB', 'AGE', 'Education', 'Native', 'Department ', 'Designation', 'Total Experience',
+  'Current Company ', 'Current Job Location', 'Notice period', 'Present CTC', 'Expected CTC', 'Recommended CTC', 'Interviewers', 'Interview Date',
+  'Stege 1 - HR', 'Stege 2- HOD', 'Stage 3 - CEO/COO', 'Designation Offered', 'Date of Joining', 'Remarks']
+const TRACKER_WIDTHS = [6, 12, 24, 14, 6, 28, 14, 18, 24, 15, 28, 20, 13, 13, 14, 16, 16, 20, 13, 13, 16, 20, 15, 40]
+const STAGE1: Record<Decision, string> = { shortlist: 'Selected', hold: 'On hold', reject: 'Rejected', none: '' }
+
+/** Age at the screening date, from a stated age or a DOB like "13 March 1991", "28-05-1989" or "19/Mar/1979". */
+function ageAt(dob: string, stated: string, date: number) {
+  if (stated) return stated
+  const m = dob.match(/(\d{1,2})\D+?(\d{1,2}|[a-z]{3,})\D+?(\d{4}|\d{2})\s*$/i)
+  if (!m) return ''
+  const on = new Date(date)
+  let year = +m[3]
+  if (year < 100) year += year > on.getFullYear() % 100 ? 1900 : 2000
+  const month = /\d/.test(m[2]) ? +m[2] - 1 : 'janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(m[2].slice(0, 3).toLowerCase()) / 3
+  if (!(month >= 0 && month <= 11)) return ''
+  const age = on.getFullYear() - year - (on < new Date(on.getFullYear(), month, +m[1]) ? 1 : 0)
+  return age > 14 && age < 80 ? String(age) : ''
+}
+
+export async function buildTrackerWorkbook(rep: Report & { jd?: string }) {
+  const { default: ExcelJS } = await import('exceljs')
+  const wb = new ExcelJS.Workbook()
+  wb.creator = 'Indo Tech · Job Lens'
+  const ws = wb.addWorksheet('Sheet1', { views: [{ state: 'frozen', ySplit: 1 }] })
+  TRACKER_WIDTHS.forEach((w, i) => { ws.getColumn(i + 1).width = w })
+  const head = ws.addRow(TRACKER_COLUMNS)
+  head.font = { bold: true }
+  head.alignment = { vertical: 'middle', wrapText: true }
+  const department = jdDepartment(rep.jd ?? '')
+  const role = rep.title.replace(/^(job description|jd)\s*[:\-–]\s*/i, '')
+  rep.results.forEach((r, i) => {
+    const p = r.profile
+    const iv = rep.interviews?.[r.id]
+    // Plain strings from the resume are written as text, never formulas.
+    ws.addRow([
+      i + 1, new Date(rep.date), r.eval.name, p?.dob ?? '', ageAt(p?.dob ?? '', p?.age ?? '', rep.date), p?.education ?? '', p?.native ?? '', department, role,
+      r.eval.yearsExperience !== null ? `${r.eval.yearsExperience} yrs` : '', p?.currentCompany ?? '', p?.currentLocation ?? '', p?.noticePeriod ?? '',
+      p?.presentCtc ?? '', p?.expectedCtc ?? '', '', '', iv?.when ? formatWhen(iv.when) : '', STAGE1[rep.decisions[r.id] ?? 'none'], '', '', '', '',
+      [`Job Lens match ${r.score}/100, ATS ${r.ats.score}.`, rep.notes[r.id]].filter(Boolean).join(' '),
+    ])
+  })
+  ws.getColumn(2).numFmt = 'dd-mm-yyyy'
+  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1 + rep.results.length, column: TRACKER_COLUMNS.length } }
+  return wb
+}
+
+export async function downloadTracker(rep: Report & { jd?: string }) {
+  const safe = (rep.title || 'screening').replace(/[^\w -]+/g, '').trim().slice(0, 40).replace(/\s+/g, '-')
+  await save(await buildTrackerWorkbook(rep), `Candidate-Tracker-${safe}-${new Date(rep.date).toISOString().slice(0, 10)}.xlsx`)
 }

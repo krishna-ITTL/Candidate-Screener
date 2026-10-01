@@ -41,6 +41,20 @@ export interface Result {
   missingPreferred: string[]
   engine: 'ai' | 'offline'
   contacts?: Contacts // missing on screenings saved before contacts were extracted
+  profile?: Profile // for HR's candidate tracker; missing on older saved screenings
+}
+
+/** Facts HR records in the candidate tracker. Taken from the resume when written there; never used in scoring. */
+export interface Profile {
+  education: string
+  dob: string
+  age: string
+  native: string
+  currentCompany: string
+  currentLocation: string
+  noticePeriod: string
+  presentCtc: string
+  expectedCtc: string
 }
 
 export interface Contacts {

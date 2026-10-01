@@ -7,6 +7,7 @@ import Results from './Results'
 import Stepper from './Stepper'
 import History from './History'
 import { loadHistory, saveHistory, type SavedRun } from '../lib/history'
+import { jdTitle as titleOf } from '../lib/jdTemplate'
 import { extractText } from '../lib/extract'
 import { evaluate, extractRequirements, friendlyError, PROVIDERS, type AiSettings } from '../lib/ai'
 import { assemble } from '../lib/scoring'
@@ -76,7 +77,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
   const readingFiles = files.filter((f) => f.status === 'reading').length
   // A step is reachable once everything before it is done.
   const canReach = (n: number) => n === 1 || (jdReady && (n === 2 || readyFiles.length > 0))
-  const jdTitle = jd.trim().split('\n').find((l) => l.trim())?.trim().slice(0, 80) ?? ''
+  const jdTitle = titleOf(jd)
   const setMode = (m: Mode) => {
     setModeState(m)
     try { localStorage.setItem('shortlist.mode', m) } catch { /* ignore */ }
@@ -324,7 +325,7 @@ export default function Screening({ settings, onOpenSettings }: { settings: AiSe
             decisions={decisions} onDecide={(id, v) => setDecisions((s) => ({ ...s, [id]: v }))}
             notes={notes} onNote={(id, v) => setNotes((s) => ({ ...s, [id]: v }))}
             interviews={interviews} onInterview={(id, i) => setInterviews((s) => ({ ...s, [id]: i }))}
-            history={runs} runId={run?.id ?? ''}
+            history={runs} runId={run?.id ?? ''} jd={run?.jd ?? jd}
           />
         </div>
       )}

@@ -292,3 +292,23 @@ export function templateJd(b: JdBrief) {
     `\nCompensation\n- ${b.salary ? `${b.salary}, based on experience and interview performance.` : `Written offline, so no live salary data was used. Confirm an indicative range for ${b.location} before publishing.`}`,
   ].filter(Boolean).join('\n')
 }
+
+// ---------- Reading a JD ----------
+// Word-table JDs (like Indo Tech's own) read as one run-on line: "Position Title: Assistant Manager – ElectricalDepartment: DesignReports To: …".
+// Labels need a colon, so "department-wise MIS" is not a label; the value stops where the next label starts.
+const NEXT_LABEL = String.raw`(?=(?:position\s*title|job\s*title|designation|department|reports?\s*to|location|grade|band|no\.?\s*of)\s*:|$)`
+
+/** The role: a "Position Title:" style label, else the first line that is not just "Job Description". */
+export function jdTitle(jd: string) {
+  const labelled = jd.match(new RegExp(String.raw`(?:position\s*title|job\s*title|designation)\s*:\s*(.+?)${NEXT_LABEL}`, 'im'))?.[1]
+  const first = jd.split('\n').map((l) => l.trim()).find((l) => l && !/^(?:job\s*description|jd)\s*:?$/i.test(l))
+  return (labelled ?? first ?? '').replace(/\s+/g, ' ').trim().slice(0, 80)
+}
+
+/** Department: a "Department:" label, or the "Company | Location | Department | Type" line Create JD writes. */
+export function jdDepartment(jd: string) {
+  const labelled = jd.match(new RegExp(String.raw`department\s*:\s*(.+?)${NEXT_LABEL}`, 'im'))?.[1]
+  if (labelled) return labelled.replace(/\s+/g, ' ').trim().slice(0, 60)
+  const parts = jd.split('\n').slice(0, 4).find((l) => (l.match(/\|/g) ?? []).length >= 3)?.split('|').map((p) => p.trim())
+  return parts?.[2] ?? ''
+}

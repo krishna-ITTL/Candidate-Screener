@@ -3,12 +3,12 @@ import { AnimatePresence, animate, motion, useInView, useMotionValue, useTransfo
 import { useRef } from 'react'
 import {
   Ban, BarChart3, Briefcase, CalendarClock, CalendarPlus, Copy, GitCompare, CheckCircle2, Contact, FileSpreadsheet, LayoutList, Loader2, Mail, Phone, ChevronDown, CircleCheck, CircleDashed, CircleX, ClipboardCopy, Crown, Download, FileText,
-  HelpCircle, NotebookPen, PauseCircle, Search, Star, ThumbsUp, TriangleAlert, XCircle,
+  HelpCircle, NotebookPen, Users, PauseCircle, Search, Star, ThumbsUp, TriangleAlert, XCircle,
 } from 'lucide-react'
 import type { Decision, Requirement, Result, ResumeFile } from '../lib/types'
 import { ElasticSlider } from './ElasticSlider'
 import { Contacts, Stats } from './Insights'
-import { downloadExcel } from '../lib/excel'
+import { downloadExcel, downloadTracker } from '../lib/excel'
 import Compare from './Compare'
 import { buildIcs, describeInterview, download, findDuplicates, firstName, loadTemplates, mailto, MODE_LABEL, type Dup, type Interview, type InterviewMode } from '../lib/hr'
 import type { SavedRun } from '../lib/history'
@@ -252,9 +252,10 @@ interface Props {
   onInterview: (id: string, i: Interview) => void
   history: SavedRun[]
   runId: string
+  jd: string
 }
 
-export default function Results({ results, reqs, files, title, decisions, onDecide, notes, onNote, onToast, date, received, interviews, onInterview, history, runId }: Props) {
+export default function Results({ results, reqs, files, title, decisions, onDecide, notes, onNote, onToast, date, received, interviews, onInterview, history, runId, jd }: Props) {
   const [picked, setPicked] = useState<string[]>([])
   const [comparing, setComparing] = useState(false)
   const [view, setView] = useState<'cards' | 'stats' | 'contacts'>('cards')
@@ -322,6 +323,16 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
     }
   }
 
+  // HR's own candidate tracker: same 24 columns, ready to paste into their sheet.
+  const exportTracker = async () => {
+    try {
+      await downloadTracker({ title, date: date || Date.now(), received, results, reqs, decisions, notes, interviews, jd })
+      onToast('Candidate tracker downloaded.')
+    } catch {
+      onToast('Could not build the candidate tracker. Try again.')
+    }
+  }
+
   const exportExcel = async () => {
     setExporting(true)
     try {
@@ -347,6 +358,7 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
           {scheduled.length > 0 && <button className="btn btn-ghost" onClick={() => calendar(scheduled)} title="All scheduled interviews in one calendar file"><CalendarPlus size={16} /> Interviews ({scheduled.length})</button>}
           <button className="btn btn-ghost" onClick={copyShortlist}><ClipboardCopy size={16} /> Copy shortlist</button>
           <button className="btn btn-quiet" onClick={exportCsv} title="Plain CSV, for importing into other tools"><Download size={16} /> CSV</button>
+          <button className="btn btn-ghost" onClick={exportTracker} title="HR's candidate tracker format (24 columns)"><Users size={16} /> Candidate tracker</button>
           <button className="btn btn-primary" onClick={exportExcel} disabled={exporting}>{exporting ? <Loader2 size={16} className="spin" /> : <FileSpreadsheet size={16} />} Excel report</button>
         </div>
       </div>

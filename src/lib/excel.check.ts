@@ -54,3 +54,23 @@ assert.deepEqual(mb.worksheets.map((w) => w.name), ['Monthly summary', 'Intervie
 assert.equal(mb.getWorksheet('Monthly summary')!.getCell('B7').value, 1, 'one screening in September')
 assert.equal(mb.getWorksheet('Interviews')!.getCell('B7').value, 'Priya Raman')
 console.log('ok', out, results.map((r) => `${r.eval.name} ${r.score}`))
+
+// HR's candidate tracker: exact 24 headers in their order and spelling, one row per candidate.
+const { buildTrackerWorkbook, TRACKER_COLUMNS } = await import('./excel')
+const twb = await buildTrackerWorkbook({ title: 'Senior Frontend Engineer', date: Date.UTC(2026, 8, 29), received: 4, results, reqs,
+  decisions: { 0: 'shortlist', 1: 'reject' }, notes: { 0: 'Phone screen Thursday' }, interviews: {}, jd: 'Senior Frontend Engineer\nAcme | Chennai | Engineering | Full-time' })
+const tout = out.replace(/\.xlsx$/, '-tracker.xlsx')
+writeFileSync(tout, Buffer.from(await twb.xlsx.writeBuffer()))
+const tb = new ExcelJS.Workbook()
+await tb.xlsx.readFile(tout)
+const tws = tb.worksheets[0]
+assert.deepEqual((tws.getRow(1).values as unknown[]).slice(1), TRACKER_COLUMNS)
+assert.equal(TRACKER_COLUMNS.length, 24)
+assert.equal(tws.rowCount, 1 + results.length)
+const first = tws.getRow(2)
+assert.equal(first.getCell(3).value, 'Priya Raman')
+assert.equal(first.getCell(8).value, 'Engineering')
+assert.equal(first.getCell(9).value, 'Senior Frontend Engineer')
+assert.equal(first.getCell(19).value, 'Selected')
+assert.match(String(first.getCell(24).value), /^Job Lens match \d+\/100, ATS \d+\. Phone screen Thursday$/)
+console.log('ok tracker', tout)
