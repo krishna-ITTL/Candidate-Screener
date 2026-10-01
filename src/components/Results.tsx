@@ -100,10 +100,10 @@ function Card({ r, rank, reqs, text, decision, onDecide, note, onNote, interview
             <span className={`badge ${t}`}>{TONE_LABEL[t]}</span>
             {dup && <span className="badge dup"><Copy size={12} /> {dup.sameRun.length ? 'Possible duplicate' : 'Applied before'}</span>}
           </div>
+          <div className="cand-file">{r.fileName}</div>
           <div className="cand-sub">
             {e.headline && <span><Briefcase size={14} /> {e.headline}</span>}
             {e.yearsExperience !== null && <span>{e.yearsExperience} yrs experience</span>}
-            <span><FileText size={14} /> {r.fileName}</span>
             {r.contacts?.email && <a href={`mailto:${r.contacts.email}`}><Mail size={14} /> {r.contacts.email}</a>}
             {r.contacts?.phone && <a href={`tel:${r.contacts.phone.replace(/[^\d+]/g, '')}`}><Phone size={14} /> {r.contacts.phone}</a>}
           </div>
@@ -262,7 +262,6 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
   const [min, setMin] = useState(0)
-  const [sortBy, setSortBy] = useState<'match' | 'ats'>('match')
 
   const d = (id: string) => decisions[id] ?? 'none'
   const rankOf = useMemo(() => new Map(results.map((r, i) => [r.id, i + 1])), [results])
@@ -273,7 +272,7 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
     .filter((r) => filter === 'all' || (filter === 'open' ? d(r.id) === 'none' : d(r.id) === filter))
     .filter((r) => r.score >= min)
     .filter((r) => !query || `${r.eval.name} ${r.fileName} ${r.matched.join(' ')}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => (sortBy === 'ats' ? b.ats.score - a.ats.score : 0) || rankOf.get(a.id)! - rankOf.get(b.id)!)
+    .sort((a, b) => rankOf.get(a.id)! - rankOf.get(b.id)!)
 
   const dups = useMemo(() => findDuplicates(results, history, runId), [results, history, runId])
   const templates = loadTemplates()
@@ -382,14 +381,6 @@ export default function Results({ results, reqs, files, title, decisions, onDeci
           Min score
           <ElasticSlider label="Minimum score" value={min} onChange={setMin} step={5} />
           <output>{min}</output>
-        </div>
-        <div className="segs" role="group" aria-label="Sort by">
-          {(['match', 'ats'] as const).map((s) => (
-            <button key={s} aria-pressed={sortBy === s} onClick={() => setSortBy(s)}>
-              {sortBy === s && <motion.span layoutId="sort-pill" className="pill" />}
-              <span>{s === 'match' ? 'Match' : 'ATS'}</span>
-            </button>
-          ))}
         </div>
       </div>
 

@@ -105,7 +105,7 @@ export function offlineRequirements(jd: string): OfflineReq[] {
       seen.add(skill)
       reqs.push({ kind: 'skill', skill, text: skill, importance: section === 'resp' ? 'essential' : importance })
     }
-    const y = line.match(/(\d{1,2})\s*\+?\s*(?:years|yrs)/i)
+    const y = line.match(/(?<![\d.])(\d{1,2})(?:\s*(?:-|–|—|to)\s*\d{1,2})?\s*\+?\s*(?:years|yrs)/i)
     if (y && !reqs.some((r) => r.kind === 'years')) {
       reqs.push({ kind: 'years', skill: `${y[1]}+ years experience`, text: line, years: +y[1], importance })
       continue
@@ -138,7 +138,7 @@ const clip = (s: string) => (s.length > 140 ? s.slice(0, 137).trimEnd() + '…' 
 
 export async function offlineEvaluate(reqs: OfflineReq[], resume: string, fileName: string, embed: Embed): Promise<Evaluation> {
   const lines = resumeLines(resume)
-  const years = yearsOf(resume)
+  const years = yearsOf(resume, fileName)
   const semantic = reqs.filter((r) => r.kind === 'bullet')
   const queries = semantic.map((r) => r.text)
   const vecs = lines.length && queries.length ? await embed([...queries, ...lines]) : []

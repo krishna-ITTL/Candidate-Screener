@@ -287,6 +287,7 @@ button { cursor: var(--cursor-hand); }
 .ring-value small { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 3px; }
 .cand-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .cand-name { font-size: 22px; font-weight: 700; }
+.cand-file { color: var(--faint); font-size: 12px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
 .badge.top { background: var(--hl); color: var(--hl-ink); }
 .badge.strong { background: var(--good-soft); color: var(--good); }
