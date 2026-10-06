@@ -19,7 +19,7 @@ const wb = await buildWorkbook({
   decisions: { 0: 'shortlist', 1: 'reject' }, notes: { 0: 'Phone screen Thursday' },
   interviews: { 0: { when: '2026-10-01T10:30', mode: 'video', where: 'meet.google.com/abc-defg' } },
 }, logo.buffer.slice(logo.byteOffset, logo.byteOffset + logo.byteLength))
-const out = process.argv[2] ?? 'joblens-report.check.xlsx'
+const out = process.argv[2] ?? 'candidate-screener-report.check.xlsx'
 writeFileSync(out, Buffer.from(await wb.xlsx.writeBuffer()))
 
 const back = new ExcelJS.Workbook()
@@ -72,7 +72,7 @@ assert.equal(first.getCell(3).value, 'Priya Raman')
 assert.equal(first.getCell(8).value, 'Engineering')
 assert.equal(first.getCell(9).value, 'Senior Frontend Engineer')
 assert.equal(first.getCell(19).value, 'Selected')
-assert.match(String(first.getCell(24).value), /^Job Lens match \d+\/100, ATS \d+\. Phone screen Thursday$/)
+assert.match(String(first.getCell(24).value), /^Candidate Screener match \d+\/100, ATS \d+\. Phone screen Thursday$/)
 console.log('ok tracker', tout)
 
 // Pipeline: stages, interviewers and the offer land in HR's columns; stale stages after an undone decision do not.

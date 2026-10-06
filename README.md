@@ -2,14 +2,14 @@
 
 <img src="docs/indotech-logo.png" alt="Indo Tech" height="56" />
 
-# Job Lens
+# Candidate Screener
 
 ### Every resume read. The best ones on top.
 
 **Resume screening for the Indo Tech Transformers Limited hiring team.**
-Upload one job description and a stack of resumes. Job Lens scores every candidate against the same rubric, checks ATS readiness, and ranks them so HR can decide in minutes, not days.
+Upload one job description and a stack of resumes. Candidate Screener scores every candidate against the same rubric, checks ATS readiness, and ranks them so HR can decide in minutes, not days.
 
-[![Live demo](https://img.shields.io/badge/Live_demo-Open_Job_Lens-ED1C24?style=for-the-badge&logo=githubpages&logoColor=white)](https://krishna-ittl.github.io/Job-Lens/)
+[![Live demo](https://img.shields.io/badge/Live_demo-Open_Candidate_Screener-ED1C24?style=for-the-badge&logo=githubpages&logoColor=white)](https://krishna-ittl.github.io/Candidate-Screener/)
 
 ![React 19](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
@@ -19,13 +19,13 @@ Upload one job description and a stack of resumes. Job Lens scores every candida
 
 <br />
 
-<img src="docs/screenshots/workspace.png" alt="Job Lens screening workspace" width="100%" />
+<img src="docs/screenshots/workspace.png" alt="Candidate Screener screening workspace" width="100%" />
 
 </div>
 
 ---
 
-## Why Job Lens
+## Why Candidate Screener
 
 | | |
 |---|---|
@@ -94,7 +94,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Demo login: `hr@joblens.demo` / `JobLens@2026`
+Demo login: `hr@candidatescreener.demo` / `Screener@2026`
 
 ```bash
 npm run build          # static site in dist/, host anywhere

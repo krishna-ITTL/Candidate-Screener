@@ -108,7 +108,7 @@ function candidateSheet(wb: import('exceljs').Workbook, logo: number | null, nam
 export async function buildWorkbook(rep: Report, logoPng: ArrayBuffer | null) {
   const { default: ExcelJS } = await import('exceljs')
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'Indo Tech · Job Lens'
+  wb.creator = 'Indo Tech · Candidate Screener'
   wb.created = new Date(rep.date)
   const logo = logoPng ? wb.addImage({ buffer: logoPng, extension: 'png' }) : null
 
@@ -225,7 +225,7 @@ export async function buildMonthlyWorkbook(history: SavedRun[], month: string, l
   const { default: ExcelJS } = await import('exceljs')
   const m = monthly(history, month)
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'Indo Tech · Job Lens'
+  wb.creator = 'Indo Tech · Candidate Screener'
   const logo = logoPng ? wb.addImage({ buffer: logoPng, extension: 'png' }) : null
   const sheet = (name: string, title: string, widths: number[]) => {
     const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: RED } } })
@@ -292,7 +292,7 @@ const dmy = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-').r
 export async function buildTrackerWorkbook(rep: TrackerReport) {
   const { default: ExcelJS } = await import('exceljs')
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'Indo Tech · Job Lens'
+  wb.creator = 'Indo Tech · Candidate Screener'
   const ws = wb.addWorksheet('Sheet1', { views: [{ state: 'frozen', ySplit: 1 }] })
   TRACKER_WIDTHS.forEach((w, i) => { ws.getColumn(i + 1).width = w })
   const head = ws.addRow(TRACKER_COLUMNS)
@@ -317,7 +317,7 @@ export async function buildTrackerWorkbook(rep: TrackerReport) {
       open.offer ? pl.recommendedCtc ?? '' : '', interviewers, iv?.when ? formatWhen(iv.when) : '', STAGE1[decision],
       open.hod ? describeStage(pl.hod) : '', open.ceo ? describeStage(pl.ceo) : '',
       open.offer ? pl.designationOffered ?? '' : '', open.offer ? dmy(pl.dateOfJoining ?? '') : '',
-      [`Job Lens match ${r.score}/100, ATS ${r.ats.score}.`, rep.notes[r.id]].filter(Boolean).join(' '),
+      [`Candidate Screener match ${r.score}/100, ATS ${r.ats.score}.`, rep.notes[r.id]].filter(Boolean).join(' '),
     ])
   })
   ws.getColumn(2).numFmt = 'dd-mm-yyyy'

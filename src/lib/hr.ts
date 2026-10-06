@@ -23,12 +23,12 @@ const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+/,
 
 /** One calendar file with an event per interview. Times are "floating", i.e. the HR person's local time. */
 export function buildIcs(events: { id: string; name: string; role: string; interview: Interview; email?: string; phone?: string }[], now = new Date()) {
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Indo Tech//Job Lens//EN', 'CALSCALE:GREGORIAN']
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Indo Tech//Candidate Screener//EN', 'CALSCALE:GREGORIAN']
   for (const e of events) {
     const start = e.interview.when.replace(/[-:]/g, '').slice(0, 13) + '00'
     lines.push(
       'BEGIN:VEVENT',
-      `UID:${e.id}@joblens.indotech`,
+      `UID:${e.id}@candidatescreener.indotech`,
       `DTSTAMP:${stamp(now)}`,
       `DTSTART:${start}`,
       'DURATION:PT45M',
